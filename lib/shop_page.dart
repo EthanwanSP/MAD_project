@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 
 import 'app_theme.dart';
+import 'app_bottom_nav.dart';
+import 'home_shell.dart';
 
 class ShopPage extends StatefulWidget {
-  const ShopPage({super.key});
+  const ShopPage({
+    super.key,
+    this.showBottomNav = true,
+  });
+
+  final bool showBottomNav;
 
   @override
   State<ShopPage> createState() => _ShopPageState();
@@ -12,7 +19,7 @@ class ShopPage extends StatefulWidget {
 class _ShopPageState extends State<ShopPage> {
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final content = Container(
       color: kPaper,
       child: SafeArea(
         child: ListView(
@@ -76,6 +83,23 @@ class _ShopPageState extends State<ShopPage> {
             const SizedBox(height: 24),
           ],
         ),
+      ),
+    );
+
+    if (!widget.showBottomNav) {
+      return content;
+    }
+
+    return Scaffold(
+      body: content,
+      bottomNavigationBar: AppBottomNav(
+        selectedIndex: 2,
+        onDestinationSelected: (value) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => HomeShell(initialIndex: value)),
+            (route) => false,
+          );
+        },
       ),
     );
   }

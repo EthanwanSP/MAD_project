@@ -17,9 +17,9 @@ class _LoginPageState extends State<LoginPage> {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [kBlush, kPeach, kPaper],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [kSky, Color(0xFFEFF6FF), kPaper],
           ),
         ),
         child: SafeArea(
@@ -28,17 +28,36 @@ class _LoginPageState extends State<LoginPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Spacer(),
-                Text('Welcome back', style: Theme.of(context).textTheme.headlineMedium),
+                const SizedBox(height: 12),
+                Container(
+                  height: 180,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.9),
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: kInk.withOpacity(0.06),
+                        blurRadius: 18,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Icon(Icons.airplanemode_active_outlined,
+                        size: 64, color: kInk.withOpacity(0.7)),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Text('Login to continue', style: Theme.of(context).textTheme.headlineMedium),
                 const SizedBox(height: 8),
                 Text(
-                  'Manage your doctor visits, queues, and consults in one place.',
+                  'Access your appointments, consults, and health records.',
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 24),
                 TextField(
                   decoration: InputDecoration(
-                    hintText: 'Email or mobile number',
+                    hintText: 'Email address',
                     prefixIcon: const Icon(Icons.mail_outline),
                   ),
                 ),
@@ -56,7 +75,7 @@ class _LoginPageState extends State<LoginPage> {
                   width: double.infinity,
                   child: FilledButton(
                     style: FilledButton.styleFrom(
-                      backgroundColor: kInk,
+                      backgroundColor: const Color(0xFF1F3A6F),
                       foregroundColor: kPaper,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -66,7 +85,7 @@ class _LoginPageState extends State<LoginPage> {
                         MaterialPageRoute(builder: (_) => const HomeShell()),
                       );
                     },
-                    child: const Text('Sign in'),
+                    child: const Text('Login'),
                   ),
                 ),
                 const SizedBox(height: 12),

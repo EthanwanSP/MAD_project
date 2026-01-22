@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 
 import 'app_theme.dart';
+import 'app_bottom_nav.dart';
+import 'home_shell.dart';
 
 class AppointmentsPage extends StatefulWidget {
-  const AppointmentsPage({super.key});
+  const AppointmentsPage({
+    super.key,
+    this.showBottomNav = true,
+  });
+
+  final bool showBottomNav;
 
   @override
   State<AppointmentsPage> createState() => _AppointmentsPageState();
@@ -12,7 +19,7 @@ class AppointmentsPage extends StatefulWidget {
 class _AppointmentsPageState extends State<AppointmentsPage> {
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final content = Container(
       color: kPaper,
       child: SafeArea(
         child: ListView(
@@ -66,6 +73,23 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
             const SizedBox(height: 24),
           ],
         ),
+      ),
+    );
+
+    if (!widget.showBottomNav) {
+      return content;
+    }
+
+    return Scaffold(
+      body: content,
+      bottomNavigationBar: AppBottomNav(
+        selectedIndex: 1,
+        onDestinationSelected: (value) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => HomeShell(initialIndex: value)),
+            (route) => false,
+          );
+        },
       ),
     );
   }

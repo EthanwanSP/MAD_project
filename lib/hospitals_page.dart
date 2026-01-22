@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'app_theme.dart';
+import 'app_bottom_nav.dart';
+import 'home_shell.dart';
 
 class HospitalsPage extends StatefulWidget {
   const HospitalsPage({super.key});
@@ -12,77 +14,95 @@ class HospitalsPage extends StatefulWidget {
 class _HospitalsPageState extends State<HospitalsPage> {
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: kPaper,
-      child: SafeArea(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            Container(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 22),
-              decoration: const BoxDecoration(
-                color: kBlush,
-                borderRadius: BorderRadius.vertical(bottom: Radius.circular(24)),
+    return Scaffold(
+      body: Container(
+        color: kPaper,
+        child: SafeArea(
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              Align(
+                alignment: Alignment.centerLeft,
+                child: IconButton(
+                  onPressed: () => Navigator.of(context).maybePop(),
+                  icon: const Icon(Icons.arrow_back),
+                ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Nearest Hospitals', style: Theme.of(context).textTheme.titleLarge),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Find care near your location',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Container(
-                height: 180,
-                decoration: BoxDecoration(
-                  color: kPeach.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: kInk.withOpacity(0.06)),
+              Container(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 22),
+                decoration: const BoxDecoration(
+                  color: kBlush,
+                  borderRadius: BorderRadius.vertical(bottom: Radius.circular(24)),
                 ),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.map_outlined, size: 36, color: kInk),
-                    const SizedBox(height: 8),
-                    Text('Map preview', style: Theme.of(context).textTheme.bodyMedium),
+                    Text('Nearest Hospitals', style: Theme.of(context).textTheme.titleLarge),
                     const SizedBox(height: 4),
-                    Text('Enable location to see nearby hospitals',
-                        style: Theme.of(context).textTheme.bodySmall),
+                    Text(
+                      'Find care near your location',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
                   ],
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text('Nearby', style: Theme.of(context).textTheme.titleMedium),
-            ),
-            const SizedBox(height: 10),
-            const _HospitalCard(
-              name: 'CityCare Medical Center',
-              distance: '1.2 km',
-              eta: '8 min drive',
-            ),
-            const _HospitalCard(
-              name: 'Northside General Hospital',
-              distance: '2.6 km',
-              eta: '12 min drive',
-            ),
-            const _HospitalCard(
-              name: 'Wellness Urgent Care',
-              distance: '3.1 km',
-              eta: '15 min drive',
-            ),
-            const SizedBox(height: 24),
-          ],
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Container(
+                  height: 180,
+                  decoration: BoxDecoration(
+                    color: kPeach.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: kInk.withOpacity(0.06)),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.map_outlined, size: 36, color: kInk),
+                      const SizedBox(height: 8),
+                      Text('Map preview', style: Theme.of(context).textTheme.bodyMedium),
+                      const SizedBox(height: 4),
+                      Text('Enable location to see nearby hospitals',
+                          style: Theme.of(context).textTheme.bodySmall),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text('Nearby', style: Theme.of(context).textTheme.titleMedium),
+              ),
+              const SizedBox(height: 10),
+              const _HospitalCard(
+                name: 'CityCare Medical Center',
+                distance: '1.2 km',
+                eta: '8 min drive',
+              ),
+              const _HospitalCard(
+                name: 'Northside General Hospital',
+                distance: '2.6 km',
+                eta: '12 min drive',
+              ),
+              const _HospitalCard(
+                name: 'Wellness Urgent Care',
+                distance: '3.1 km',
+                eta: '15 min drive',
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
         ),
+      ),
+      bottomNavigationBar: AppBottomNav(
+        selectedIndex: 0,
+        onDestinationSelected: (value) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => HomeShell(initialIndex: value)),
+            (route) => false,
+          );
+        },
       ),
     );
   }

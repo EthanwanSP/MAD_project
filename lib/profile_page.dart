@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 
 import 'app_theme.dart';
+import 'app_bottom_nav.dart';
+import 'home_shell.dart';
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key});
+  const ProfilePage({
+    super.key,
+    this.showBottomNav = true,
+  });
+
+  final bool showBottomNav;
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -12,7 +19,7 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final content = Container(
       color: kPaper,
       child: SafeArea(
         child: ListView(
@@ -124,6 +131,23 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ],
         ),
+      ),
+    );
+
+    if (!widget.showBottomNav) {
+      return content;
+    }
+
+    return Scaffold(
+      body: content,
+      bottomNavigationBar: AppBottomNav(
+        selectedIndex: 3,
+        onDestinationSelected: (value) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => HomeShell(initialIndex: value)),
+            (route) => false,
+          );
+        },
       ),
     );
   }

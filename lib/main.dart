@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'app_theme.dart';
 import 'appointments_page.dart';
 import 'calendar_page.dart';
+import 'call_page.dart';
 import 'hospitals_page.dart';
 import 'login_page.dart';
 import 'queue_page.dart';
@@ -35,6 +36,7 @@ class _MyAppState extends State<MyApp> {
         '/calendar': (_) => const CalendarPage(),
         '/teleconsult': (_) => const TeleConsultPage(),
         '/hospitals': (_) => const HospitalsPage(),
+        '/call': (_) => const CallPage(),
       },
     );
   }
