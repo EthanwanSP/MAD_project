@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
+
 import 'app_theme.dart';
 import 'home_shell.dart';
+import 'google_map.dart';
 
 class HospitalsPage extends StatefulWidget {
   const HospitalsPage({super.key});
@@ -23,7 +25,9 @@ class _HospitalsPageState extends State<HospitalsPage> {
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 22),
               decoration: const BoxDecoration(
                 color: kBlush,
-                borderRadius: BorderRadius.vertical(bottom: Radius.circular(24)),
+                borderRadius: BorderRadius.vertical(
+                  bottom: Radius.circular(24),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -33,7 +37,9 @@ class _HospitalsPageState extends State<HospitalsPage> {
                       IconButton(
                         onPressed: () {
                           Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(builder: (_) => const HomeShell()),
+                            MaterialPageRoute(
+                              builder: (_) => const HomeShell(),
+                            ),
                           );
                         },
                         icon: const Icon(Icons.arrow_back, color: kInk),
@@ -42,7 +48,10 @@ class _HospitalsPageState extends State<HospitalsPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Nearest Hospitals', style: Theme.of(context).textTheme.titleLarge),
+                            Text(
+                              'Nearest Hospitals',
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
                             const SizedBox(height: 4),
                             Text(
                               'Find care near your location',
@@ -60,29 +69,33 @@ class _HospitalsPageState extends State<HospitalsPage> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Container(
-                height: 180,
-                decoration: BoxDecoration(
-                  color: kPeach.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: kInk.withOpacity(0.06)),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: kBlush,
+                  blurRadius: 110,
+                  offset: Offset(0, 0),
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.map_outlined, size: 36, color: kInk),
-                    const SizedBox(height: 8),
-                    Text('Map preview', style: Theme.of(context).textTheme.bodyMedium),
-                    const SizedBox(height: 4),
-                    Text('Enable location to see nearby hospitals',
-                        style: Theme.of(context).textTheme.bodySmall),
-                  ],
-                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(30.0),
+              child: SizedBox(
+                height: 300,
+                width: 300,
+                child: MyGooglemap()
+              ),
+            ),
               ),
             ),
             const SizedBox(height: 16),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text('Nearby', style: Theme.of(context).textTheme.titleMedium),
+              child: Text(
+                'Nearby',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
             ),
             const SizedBox(height: 10),
             const _HospitalCard(
@@ -145,7 +158,11 @@ class _HospitalCard extends StatelessWidget {
               color: kPeach.withOpacity(0.3),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.local_hospital_outlined, color: kInk, size: 18),
+            child: const Icon(
+              Icons.local_hospital_outlined,
+              color: kInk,
+              size: 18,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -154,7 +171,10 @@ class _HospitalCard extends StatelessWidget {
               children: [
                 Text(name, style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 4),
-                Text('$distance • $eta', style: Theme.of(context).textTheme.bodySmall),
+                Text(
+                  '$distance • $eta',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
               ],
             ),
           ),

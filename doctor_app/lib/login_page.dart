@@ -32,7 +32,10 @@ class _LoginPageState extends State<LoginPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const Spacer(),
+                Image.asset('assets/images/medical.png',
+                height: 200,
+                width: 200,),
+                SizedBox(height: 40,),
                 Text(
                   'Feeling unwell?',
                   style: Theme.of(context).textTheme.headlineMedium,
