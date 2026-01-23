@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import 'app_theme.dart';
@@ -12,8 +13,21 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  void _redirectToLogin() {
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LoginPage()),
+      (route) => false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _redirectToLogin());
+      return const SizedBox.shrink();
+    }
+
     return Container(
       color: kPaper,
       child: SafeArea(
@@ -80,17 +94,17 @@ class _ProfilePageState extends State<ProfilePage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'John Doe',
+                              'Account',
                               style: Theme.of(context).textTheme.titleMedium,
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              'john.doe@email.com',
+                              user.email ?? 'No email found',
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              'Member since Jan 2024',
+                              'Signed in',
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
                           ],
@@ -174,10 +188,8 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                       ),
                       onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => LoginPage()),
-                        );
+                        FirebaseAuth.instance.signOut();
+                        _redirectToLogin();
                       },
                       child: const Text('Log out'),
                     ),

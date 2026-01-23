@@ -1,7 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import 'app_theme.dart';
 import 'home_shell.dart';
+import 'services/firestore_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -11,10 +13,162 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-
   bool _hidden = true;
   final TextEditingController _emailcontroller = TextEditingController();
   final TextEditingController _passwordcontorller = TextEditingController();
+  final FirestoreService _firestoreService = FirestoreService();
+
+  @override
+  void dispose() {
+    _emailcontroller.dispose();
+    _passwordcontorller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _signIn() async {
+    final email = _emailcontroller.text.trim();
+    final password = _passwordcontorller.text.trim();
+    if (email.isEmpty || password.isEmpty) {
+      _showMessage('Please enter your email and password.');
+      return;
+    }
+    try {
+      final result = await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      final user = result.user;
+      if (user != null) {
+        await _firestoreService.ensureUserDoc(uid: user.uid, email: user.email ?? email);
+        if (!mounted) return;
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const HomeShell()),
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      _showMessage(_authErrorMessage(e));
+    }
+  }
+
+  Future<void> _showRegisterDialog() async {
+    final emailController = TextEditingController();
+    final passwordController = TextEditingController();
+    bool hidePassword = true;
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Create account'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: const InputDecoration(
+                      hintText: 'Email address',
+                      prefixIcon: Icon(Icons.mail_outline),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: passwordController,
+                    obscureText: hidePassword,
+                    decoration: InputDecoration(
+                      hintText: 'Password',
+                      prefixIcon: const Icon(Icons.lock_outline),
+                      suffixIcon: IconButton(
+                        onPressed: () {
+                          setState(() => hidePassword = !hidePassword);
+                        },
+                        icon: Icon(
+                          hidePassword
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Cancel'),
+                ),
+                FilledButton(
+                  onPressed: () async {
+                    final email = emailController.text.trim();
+                    final password = passwordController.text.trim();
+                    if (email.isEmpty || password.isEmpty) {
+                      _showMessage('Please enter your email and password.');
+                      return;
+                    }
+                    try {
+                      final result = await FirebaseAuth.instance
+                          .createUserWithEmailAndPassword(
+                        email: email,
+                        password: password,
+                      );
+                      final user = result.user;
+                      if (user != null) {
+                        await _firestoreService.ensureUserDoc(
+                          uid: user.uid,
+                          email: user.email ?? email,
+                        );
+                      }
+                      if (!mounted) return;
+                      Navigator.of(dialogContext).pop();
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(builder: (_) => const HomeShell()),
+                      );
+                    } on FirebaseAuthException catch (e) {
+                      _showMessage(_authErrorMessage(e));
+                    }
+                  },
+                  child: const Text('Register'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    emailController.dispose();
+    passwordController.dispose();
+  }
+
+  String _authErrorMessage(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'user-not-found':
+        return 'No account found for that email.';
+      case 'wrong-password':
+        return 'Incorrect password. Please try again.';
+      case 'email-already-in-use':
+        return 'That email is already registered. Try logging in.';
+      case 'weak-password':
+        return 'Password is too weak. Use at least 6 characters.';
+      case 'invalid-email':
+        return 'Please enter a valid email address.';
+      case 'operation-not-allowed':
+        return 'Email/password sign-in is not enabled in Firebase.';
+      case 'too-many-requests':
+        return 'Too many attempts. Please try again later.';
+      case 'network-request-failed':
+        return 'Network error. Check your connection and try again.';
+      default:
+        return 'Something went wrong. Please try again.';
+    }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -61,7 +215,7 @@ class _LoginPageState extends State<LoginPage> {
                       TextField(
                         controller: _emailcontroller,
                         decoration: InputDecoration(
-                          hintText: 'Email or mobile number',
+                          hintText: 'Email address',
                           prefixIcon: const Icon(Icons.mail_outline),
                           suffixIcon:  _emailcontroller.text.isEmpty? Container(width: 0):IconButton(onPressed: (){
                             _emailcontroller.clear();
@@ -104,13 +258,7 @@ class _LoginPageState extends State<LoginPage> {
                               borderRadius: BorderRadius.circular(16),
                             ),
                           ),
-                          onPressed: () {
-                            Navigator.of(context).pushReplacement(
-                              MaterialPageRoute(
-                                builder: (_) => const HomeShell(),
-                              ),
-                            );
-                          },
+                          onPressed: _signIn,
                           child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -133,7 +281,7 @@ class _LoginPageState extends State<LoginPage> {
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: _showRegisterDialog,
                       child: const Text(
                         'Create account',
                         style: TextStyle(decoration: TextDecoration.underline),
