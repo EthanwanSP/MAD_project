@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 
 import 'app_theme.dart';
 import 'home_shell.dart';
@@ -32,10 +33,10 @@ class _LoginPageState extends State<LoginPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Image.asset('assets/images/medical.png',
-                height: 200,
-                width: 200,),
-                SizedBox(height: 40,),
+                Lottie.network('https://lottie.host/ef347e76-39ef-429b-afc9-985cd90a7189/1lpuwAfKUM.json',
+                width: 200,
+                height: 200),
+                SizedBox(height: 30),
                 Text(
                   'Feeling unwell?',
                   style: Theme.of(context).textTheme.headlineMedium,
@@ -90,7 +91,7 @@ class _LoginPageState extends State<LoginPage> {
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           TextButton(
-                            onPressed: () {},
+                            onPressed: () {Navigator.pushNamed(context, '/forgotPassword');},
                             child: const Text('Forgot password?'),
                           ),
                         ],
@@ -104,7 +105,7 @@ class _LoginPageState extends State<LoginPage> {
                             foregroundColor: kPaper,
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
+                              borderRadius: BorderRadius.circular(40),
                             ),
                           ),
                           onPressed: () {
@@ -117,7 +118,7 @@ class _LoginPageState extends State<LoginPage> {
                           child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text('Sign in'),
+                              Text("Let's Go!", style: TextStyle(fontFamily: 'Roboto', fontWeight: FontWeight.bold),),
                               SizedBox(width: 8),
                               Icon(Icons.login, size: 20),
                             ],
@@ -136,7 +137,7 @@ class _LoginPageState extends State<LoginPage> {
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () {Navigator.pushNamed(context, '/signUp');},
                       child: const Text(
                         'Create account',
                         style: TextStyle(decoration: TextDecoration.underline),
@@ -179,7 +180,7 @@ class _LoginPageState extends State<LoginPage> {
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(40),
                       ),
                     ),
                     onPressed: () {},
@@ -193,7 +194,7 @@ class _LoginPageState extends State<LoginPage> {
                           'Sign in with Google',
                           style: const TextStyle(
                             fontSize: 16,
-                            fontWeight: FontWeight.w400,
+                            fontWeight: FontWeight.bold,
                             fontFamily: 'Roboto',
                             color: Colors.white,
                           ),

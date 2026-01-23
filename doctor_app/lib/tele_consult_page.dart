@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'app_theme.dart';
 import 'home_shell.dart';
 
@@ -23,7 +22,9 @@ class _TeleConsultPageState extends State<TeleConsultPage> {
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 22),
               decoration: const BoxDecoration(
                 color: kBlush,
-                borderRadius: BorderRadius.vertical(bottom: Radius.circular(24)),
+                borderRadius: BorderRadius.vertical(
+                  bottom: Radius.circular(24),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -33,7 +34,9 @@ class _TeleConsultPageState extends State<TeleConsultPage> {
                       IconButton(
                         onPressed: () {
                           Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(builder: (_) => const HomeShell()),
+                            MaterialPageRoute(
+                              builder: (_) => const HomeShell(),
+                            ),
                           );
                         },
                         icon: const Icon(Icons.arrow_back, color: kInk),
@@ -42,10 +45,13 @@ class _TeleConsultPageState extends State<TeleConsultPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Tele Consult', style: Theme.of(context).textTheme.titleLarge),
+                            Text(
+                              'Tele Consult',
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
                             const SizedBox(height: 4),
                             Text(
-                              'Chat or video call with a doctor',
+                              'Video call with our doctor now!',
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
                           ],
@@ -59,7 +65,10 @@ class _TeleConsultPageState extends State<TeleConsultPage> {
             const SizedBox(height: 16),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text('Available now', style: Theme.of(context).textTheme.titleMedium),
+              child: Text(
+                'Available now',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
             ),
             const SizedBox(height: 12),
             const _ConsultCard(
@@ -77,7 +86,31 @@ class _TeleConsultPageState extends State<TeleConsultPage> {
               specialty: 'Dermatology',
               status: 'Available in 10 min',
             ),
-            const SizedBox(height: 24),
+            const _ConsultCard(
+              name: 'Dr. Hui Min Ng',
+              specialty: 'Dermatology',
+              status: 'Available in 10 min',
+            ),
+            const _ConsultCard(
+              name: 'Dr. John Ng',
+              specialty: 'Dermatology',
+              status: 'Available in 15 min',
+            ),
+            const _ConsultCard(
+              name: 'Dr. Heng Ng',
+              specialty: 'Dermatology',
+              status: 'Available in 20 min',
+            ),
+            const _ConsultCard(
+              name: 'Dr. Sofia',
+              specialty: 'Dermatology',
+              status: 'Available in 25 min',
+            ),
+            const _ConsultCard(
+              name: 'Dr.Ng',
+              specialty: 'Dermatology',
+              status: 'Available in 30 min',
+            ),
           ],
         ),
       ),
@@ -134,13 +167,20 @@ class _ConsultCard extends StatelessWidget {
           ),
           FilledButton(
             style: FilledButton.styleFrom(
-              backgroundColor: kInk,
-              foregroundColor: kPaper,
+              backgroundColor: const Color.fromARGB(255, 81, 238, 49),
+              foregroundColor: const Color.fromARGB(255, 0, 0, 0),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
             ),
-            onPressed: () {},
-            child: const Text('Connect'),
+            onPressed: () {
+              Navigator.pushNamed(context, '/calling');
+            },
+            child: const Text(
+              'Call now',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, fontFamily: 'Roboto'),
+            ),
           ),
         ],
       ),

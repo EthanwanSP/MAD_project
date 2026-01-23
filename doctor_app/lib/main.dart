@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'app_theme.dart';
 import 'appointments_page.dart';
@@ -7,6 +8,9 @@ import 'login_page.dart';
 import 'queue_page.dart';
 import 'shop_page.dart';
 import 'tele_consult_page.dart';
+import 'forgot_password_page.dart';
+import 'signup_page.dart';
+import 'calling_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -23,7 +27,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Doctr + Connect',
+      title: 'Doctor + Connect',
       debugShowCheckedModeBanner: false,
       theme: buildAppTheme(),
       home: const LoginPage(),
@@ -34,9 +38,16 @@ class _MyAppState extends State<MyApp> {
         '/calendar': (_) => const CalendarPage(),
         '/teleconsult': (_) => const TeleConsultPage(),
         '/hospitals': (_) => const HospitalsPage(),
+        '/login': (_) => const LoginPage(),
+        '/signUp': (_) => const SignupPage(),
+        '/forgotPassword': (_) => const ForgotPassword(),
+        '/calling': (_) => const CallingPage(),
       },
     );
   }
 }
+
+
+
 
 

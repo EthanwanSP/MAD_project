@@ -15,9 +15,9 @@ class _HomeDashboardState extends State<HomeDashboard> {
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [kPaper,kPeach,kBlush,kPaper],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [kPaper,kPeach,kBlush],
         ),
       ),
       child: SafeArea(
@@ -28,15 +28,17 @@ class _HomeDashboardState extends State<HomeDashboard> {
               children: [
                 CircleAvatar(
                   radius: 30,
-                  backgroundColor: kInk,
-                  child: const Icon(Icons.person, color: kInk),
+                  backgroundColor:Colors.white,
+                  child: Icon(Icons.person, color: kInk,),
+                  
+                  
                 ),
                 const SizedBox(width: 12),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Welcome in, Amelia!', style: Theme.of(context).textTheme.titleMedium),
-                    Text('Your health, streamlined', style: Theme.of(context).textTheme.bodySmall),
+                    Text('Welcome in, Amelia!', style: Theme.of(context).textTheme.titleLarge),
+                    Text('Your health, streamlined', style: Theme.of(context).textTheme.titleSmall),
                   ],
                 ),
                 const Spacer(),
@@ -75,7 +77,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
               ),
             ),
             const SizedBox(height: 18),
-            Text('Quick actions', style: Theme.of(context).textTheme.titleLarge),
+            Text('Quick services', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 12),
             LayoutBuilder(
               builder: (context, constraints) {
