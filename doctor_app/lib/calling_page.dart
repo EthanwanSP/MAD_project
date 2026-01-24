@@ -28,15 +28,42 @@ class CallingPage extends StatelessWidget {
             ),
             const Spacer(),
             Expanded(
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/teleconsult');},
-                style: ElevatedButton.styleFrom(
-                  shape: CircleBorder(),
-                  padding: EdgeInsets.all(3),
-                  backgroundColor: Colors.red,
-                ),
-                child: Icon(Icons.call_end, color: kInk, size: 40),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                    },
+                    style: ElevatedButton.styleFrom(
+                      shape: CircleBorder(),
+                      padding: EdgeInsets.all(3),
+                      backgroundColor: kInk
+                    ),
+                    child: Icon(Icons.volume_off, color: Colors.white, size: 40),
+                  ),
+                  SizedBox(width: 10,),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/teleconsult');},
+                    style: ElevatedButton.styleFrom(
+                      shape: CircleBorder(),
+                      padding: EdgeInsets.all(15),
+                      backgroundColor: Colors.red,
+                    ),
+                    child: Icon(Icons.call_end, color: Colors.white, size: 40),
+                  ),
+                  SizedBox(width: 10,),
+                  ElevatedButton(
+                    onPressed: () {
+                     },
+                    style: ElevatedButton.styleFrom(
+                      shape: CircleBorder(),
+                      padding: EdgeInsets.all(3),
+                      backgroundColor: kInk
+                    ),
+                    child: Icon(Icons.video_call_sharp, color: Colors.white, size: 40),
+                  ),
+                ],
               ),
             ),
           ],

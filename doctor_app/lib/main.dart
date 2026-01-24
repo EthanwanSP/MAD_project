@@ -1,4 +1,6 @@
 
+
+import 'package:doctor_app/calling_page.dart';
 import 'package:flutter/material.dart';
 import 'app_theme.dart';
 import 'appointments_page.dart';
@@ -10,7 +12,6 @@ import 'shop_page.dart';
 import 'tele_consult_page.dart';
 import 'forgot_password_page.dart';
 import 'signup_page.dart';
-import 'calling_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -46,8 +47,3 @@ class _MyAppState extends State<MyApp> {
     );
   }
 }
-
-
-
-
-

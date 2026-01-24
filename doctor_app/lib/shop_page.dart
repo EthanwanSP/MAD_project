@@ -42,10 +42,10 @@ class _ShopPageState extends State<ShopPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Shop', style: Theme.of(context).textTheme.titleLarge),
+                            Text('Home Remedies', style: Theme.of(context).textTheme.titleLarge),
                             const SizedBox(height: 4),
                             Text(
-                              'Browse health essentials and services',
+                              'Browse the magic of home remedies!',
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
                           ],
@@ -59,7 +59,13 @@ class _ShopPageState extends State<ShopPage> {
             const SizedBox(height: 16),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text('Recommended', style: Theme.of(context).textTheme.titleMedium),
+              child: Text(
+                'Popular',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 24,
+                ),
+              ),
             ),
             const SizedBox(height: 12),
             GridView.count(
@@ -74,22 +80,38 @@ class _ShopPageState extends State<ShopPage> {
                 _ShopCard(
                   title: 'Wellness Pack',
                   subtitle: 'Starter vitamins',
-                  price: '\$29',
+                  
+                  imageUrl: 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=400',
                 ),
                 _ShopCard(
                   title: 'Tele Consult',
                   subtitle: 'Anytime access',
-                  price: '\$18',
+                 
+                  imageUrl: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=400',
                 ),
                 _ShopCard(
                   title: 'Lab Screening',
                   subtitle: 'Full panel',
-                  price: '\$89',
+                  
+                  imageUrl: 'https://images.unsplash.com/photo-1579154204601-01588f351e67?w=400',
                 ),
                 _ShopCard(
                   title: 'Skin Care',
                   subtitle: 'Derm-approved',
-                  price: '\$25',
+                 
+                  imageUrl: 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=400',
+                ),
+                _ShopCard(
+                  title: 'Herbal Tea',
+                  subtitle: 'Relaxation blend',
+                 
+                  imageUrl: 'https://ostrovit.com/data/include/img/news/1738059168.jpg',
+                ),
+                _ShopCard(
+                  title: 'Yoga Kit',
+                  subtitle: 'Complete set',
+                  
+                  imageUrl: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400',
                 ),
               ],
             ),
@@ -105,12 +127,12 @@ class _ShopCard extends StatelessWidget {
   const _ShopCard({
     required this.title,
     required this.subtitle,
-    required this.price,
+    required this.imageUrl,
   });
 
   final String title;
   final String subtitle;
-  final String price;
+  final String imageUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -127,6 +149,10 @@ class _ShopCard extends StatelessWidget {
             offset: const Offset(0, 6),
           ),
         ],
+        image: DecorationImage(
+          image: NetworkImage(imageUrl),
+          fit: BoxFit.cover,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -135,17 +161,29 @@ class _ShopCard extends StatelessWidget {
             height: 40,
             width: 40,
             decoration: BoxDecoration(
-              color: kPeach.withOpacity(0.3),
+              color: kPeach.withOpacity(0.8),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(Icons.shopping_bag_outlined, color: kInk),
           ),
           const Spacer(),
-          Text(title, style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 4),
-          Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
-          const SizedBox(height: 8),
-          Text(price, style: Theme.of(context).textTheme.titleMedium),
+          Container(
+            padding: const EdgeInsets.all(8),
+            
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(color: Colors.white, fontSize: 15, fontWeight:FontWeight.bold, fontFamily: 'PT sarif')
+                ),
+                const SizedBox(height: 2),
+                Text(subtitle, style: TextStyle(color: Colors.white, fontSize: 10, fontWeight:FontWeight.bold, fontFamily: 'PT sarif')),
+                const SizedBox(height: 4),
+                
+              ],
+            ),
+          ),
         ],
       ),
     );
