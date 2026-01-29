@@ -15,12 +15,73 @@ class _QueuePageState extends State<QueuePage> {
   Widget build(BuildContext context) {
     return Container(
       color: kPaper,
-      child: SafeArea(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            Container(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 22),
+      child: Stack(
+        children: [
+          ListView(
+            padding: const EdgeInsets.only(top: 140), // Space for fixed header
+            children: [
+              const SizedBox(height: 18),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Container(
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    color: kPaper,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: kInk.withOpacity(0.08)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: kInk.withOpacity(0.05),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        height: 54,
+                        width: 54,
+                        decoration: BoxDecoration(
+                          color: kPeach.withOpacity(0.35),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Icon(Icons.confirmation_number_outlined, color: kInk, size: 26),
+                      ),
+                      const SizedBox(width: 16),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Your queue number', style: Theme.of(context).textTheme.bodySmall),
+                          const SizedBox(height: 4),
+                          Text('A-17', style: Theme.of(context).textTheme.titleLarge),
+                          const SizedBox(height: 4),
+                          Text('Estimated wait: 18 min', style: Theme.of(context).textTheme.bodySmall),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text('Now serving', style: Theme.of(context).textTheme.titleMedium),
+              ),
+              const SizedBox(height: 8),
+              const _QueueStatusTile(label: 'A-12', status: 'In consultation'),
+              const _QueueStatusTile(label: 'A-13', status: 'Ready soon'),
+              const _QueueStatusTile(label: 'A-14', status: 'In consultation'),
+              const SizedBox(height: 24),
+            ],
+          ),
+          // Fixed header at the top
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(20, 50, 20, 22),
               decoration: const BoxDecoration(
                 color: kBlush,
                 borderRadius: BorderRadius.vertical(bottom: Radius.circular(24)),
@@ -56,61 +117,8 @@ class _QueuePageState extends State<QueuePage> {
                 ],
               ),
             ),
-            const SizedBox(height: 18),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: kPaper,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: kInk.withOpacity(0.08)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: kInk.withOpacity(0.05),
-                      blurRadius: 12,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      height: 54,
-                      width: 54,
-                      decoration: BoxDecoration(
-                        color: kPeach.withOpacity(0.35),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: const Icon(Icons.confirmation_number_outlined, color: kInk, size: 26),
-                    ),
-                    const SizedBox(width: 16),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Your queue number', style: Theme.of(context).textTheme.bodySmall),
-                        const SizedBox(height: 4),
-                        Text('A-17', style: Theme.of(context).textTheme.titleLarge),
-                        const SizedBox(height: 4),
-                        Text('Estimated wait: 18 min', style: Theme.of(context).textTheme.bodySmall),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text('Now serving', style: Theme.of(context).textTheme.titleMedium),
-            ),
-            const SizedBox(height: 8),
-            const _QueueStatusTile(label: 'A-12', status: 'In consultation'),
-            const _QueueStatusTile(label: 'A-13', status: 'Ready soon'),
-            const _QueueStatusTile(label: 'A-14', status: 'In consultation'),
-            const SizedBox(height: 24),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

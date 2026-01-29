@@ -16,12 +16,144 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     return Container(
       color: kPaper,
-      child: SafeArea(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            Container(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 22),
+      child: Stack(
+        children: [
+          ListView(
+            padding: const EdgeInsets.only(top: 140), // Space for fixed header
+            children: [
+              const SizedBox(height: 18),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 28,
+                          backgroundColor: kPeach.withOpacity(0.35),
+                          child: const Icon(Icons.person, color: kInk, size: 28),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'John Doe',
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'john.doe@email.com',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Member since Jan 2024',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: kBlush,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.edit_outlined,
+                            size: 16,
+                            color: kInk,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 18),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: const [
+                        _StatTile(value: '12', label: 'Appointments'),
+                        _StatTile(value: '5', label: 'Saved Doctors'),
+                        _StatTile(value: '3', label: 'Prescriptions'),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    const _SectionTitle(title: 'Health Profile'),
+                    const SizedBox(height: 10),
+                    const _SectionCard(
+                      children: [
+                        _SectionRow(
+                          icon: Icons.favorite_border,
+                          label: 'Medical Records',
+                        ),
+                        _DividerRow(),
+                        _SectionRow(
+                          icon: Icons.receipt_long_outlined,
+                          label: 'Prescriptions',
+                        ),
+                        _DividerRow(),
+                        _SectionRow(
+                          icon: Icons.person_outline,
+                          label: 'Personal Info',
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 18),
+                    const _SectionTitle(title: 'App Settings'),
+                    const SizedBox(height: 10),
+                    const _SectionCard(
+                      children: [
+                        _SectionRow(
+                          icon: Icons.notifications_none_outlined,
+                          label: 'Notifications',
+                        ),
+                        _DividerRow(),
+                        _SectionRow(
+                          icon: Icons.lock_outline,
+                          label: 'Privacy & Security',
+                        ),
+                        _DividerRow(),
+                        _SectionRow(icon: Icons.help_outline, label: 'Support'),
+                      ],
+                    ),
+                    const SizedBox(height: 18),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: kInk,
+                          foregroundColor: kPaper,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => LoginPage()),
+                          );
+                        },
+                        child: const Text('Log out'),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          // Fixed header at the top
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(20, 50, 20, 22),
               decoration: const BoxDecoration(
                 color: kBlush,
                 borderRadius: BorderRadius.vertical(
@@ -62,132 +194,8 @@ class _ProfilePageState extends State<ProfilePage> {
                 ],
               ),
             ),
-            const SizedBox(height: 18),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 28,
-                        backgroundColor: kPeach.withOpacity(0.35),
-                        child: const Icon(Icons.person, color: kInk, size: 28),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'John Doe',
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'john.doe@email.com',
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'Member since Jan 2024',
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: kBlush,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.edit_outlined,
-                          size: 16,
-                          color: kInk,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 18),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: const [
-                      _StatTile(value: '12', label: 'Appointments'),
-                      _StatTile(value: '5', label: 'Saved Doctors'),
-                      _StatTile(value: '3', label: 'Prescriptions'),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  const _SectionTitle(title: 'Health Profile'),
-                  const SizedBox(height: 10),
-                  const _SectionCard(
-                    children: [
-                      _SectionRow(
-                        icon: Icons.favorite_border,
-                        label: 'Medical Records',
-                      ),
-                      _DividerRow(),
-                      _SectionRow(
-                        icon: Icons.receipt_long_outlined,
-                        label: 'Prescriptions',
-                      ),
-                      _DividerRow(),
-                      _SectionRow(
-                        icon: Icons.person_outline,
-                        label: 'Personal Info',
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 18),
-                  const _SectionTitle(title: 'App Settings'),
-                  const SizedBox(height: 10),
-                  const _SectionCard(
-                    children: [
-                      _SectionRow(
-                        icon: Icons.notifications_none_outlined,
-                        label: 'Notifications',
-                      ),
-                      _DividerRow(),
-                      _SectionRow(
-                        icon: Icons.lock_outline,
-                        label: 'Privacy & Security',
-                      ),
-                      _DividerRow(),
-                      _SectionRow(icon: Icons.help_outline, label: 'Support'),
-                    ],
-                  ),
-                  const SizedBox(height: 18),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: kInk,
-                        foregroundColor: kPaper,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => LoginPage()),
-                        );
-                      },
-                      child: const Text('Log out'),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

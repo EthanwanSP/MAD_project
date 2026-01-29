@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'app_theme.dart';
 import 'home_shell.dart';
+import 'appointments_manager.dart';
 
 class AppointmentsPage extends StatefulWidget {
   const AppointmentsPage({super.key});
@@ -11,19 +12,95 @@ class AppointmentsPage extends StatefulWidget {
 }
 
 class _AppointmentsPageState extends State<AppointmentsPage> {
+  final AppointmentsManager _manager = AppointmentsManager();
+
+  @override
+  void initState() {
+    super.initState();
+    _manager.addListener(_onAppointmentsChanged);
+  }
+
+  @override
+  void dispose() {
+    _manager.removeListener(_onAppointmentsChanged);
+    super.dispose();
+  }
+
+  void _onAppointmentsChanged() {
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
+    final appointments = _manager.appointments;
+
     return Container(
       color: kPaper,
-      child: SafeArea(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            Container(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 22),
+      child: Stack(
+        children: [
+          ListView(
+            padding: const EdgeInsets.only(top: 140), // Space for fixed header
+            children: [
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text('Upcoming (${appointments.length})',
+                    style: Theme.of(context).textTheme.titleMedium),
+              ),
+              const SizedBox(height: 12),
+              if (appointments.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(40),
+                  child: Column(
+                    children: [
+                      Icon(Icons.event_busy, size: 80, color: kInk.withOpacity(0.3)),
+                      const SizedBox(height: 16),
+                      Text(
+                        'No appointments scheduled',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              color: kInk.withOpacity(0.5),
+                            ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Book an appointment from the home page',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: kInk.withOpacity(0.5),
+                            ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                )
+              else
+                ...List.generate(
+                  appointments.length,
+                  (index) => AppointmentCard(
+                    key: ValueKey(appointments[index].id),
+                    appointment: appointments[index],
+                    onReschedule: (newDate, newTime) {
+                      _manager.updateAppointment(
+                          appointments[index].id, newDate, newTime);
+                    },
+                    onCancel: () {
+                      _manager.removeAppointment(appointments[index].id);
+                    },
+                  ),
+                ),
+              const SizedBox(height: 24),
+            ],
+          ),
+          // Fixed header at the top
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(20, 50, 20, 22),
               decoration: const BoxDecoration(
                 color: kBlush,
-                borderRadius: BorderRadius.vertical(bottom: Radius.circular(24)),
+                borderRadius:
+                    BorderRadius.vertical(bottom: Radius.circular(24)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -33,7 +110,8 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
                       IconButton(
                         onPressed: () {
                           Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(builder: (_) => const HomeShell()),
+                            MaterialPageRoute(
+                                builder: (_) => const HomeShell()),
                           );
                         },
                         icon: const Icon(Icons.arrow_back, color: kInk),
@@ -42,7 +120,8 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('My Appointments', style: Theme.of(context).textTheme.titleLarge),
+                            Text('My Appointments',
+                                style: Theme.of(context).textTheme.titleLarge),
                             const SizedBox(height: 4),
                             Text(
                               'Manage your healthcare bookings',
@@ -56,36 +135,8 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text('Upcoming (3)', style: Theme.of(context).textTheme.titleMedium),
-            ),
-            const SizedBox(height: 12),
-            const AppointmentCard(
-              name: 'Dr. Sarah Johnson',
-              specialty: 'General Practitioner',
-              date: 'Jan 22, 2026',
-              time: '10:00 AM',
-              location: 'MediConnect Clinic - Main',
-            ),
-            const AppointmentCard(
-              name: 'Dr. Michael Chen',
-              specialty: 'Dentist',
-              date: 'Jan 25, 2026',
-              time: '2:30 PM',
-              location: 'MediConnect Dental Center',
-            ),
-            const AppointmentCard(
-              name: 'Dr. Emily Rodriguez',
-              specialty: 'Dermatologist',
-              date: 'Feb 2, 2026',
-              time: '9:15 AM',
-              location: 'MediConnect Specialist Clinic',
-            ),
-            const SizedBox(height: 24),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -94,24 +145,157 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
 class AppointmentCard extends StatefulWidget {
   const AppointmentCard({
     super.key,
-    required this.name,
-    required this.specialty,
-    required this.date,
-    required this.time,
-    required this.location,
+    required this.appointment,
+    required this.onReschedule,
+    required this.onCancel,
   });
 
-  final String name;
-  final String specialty;
-  final String date;
-  final String time;
-  final String location;
+  final AppointmentData appointment;
+  final Function(DateTime date, TimeOfDay time) onReschedule;
+  final VoidCallback onCancel;
 
   @override
   State<AppointmentCard> createState() => _AppointmentCardState();
 }
 
 class _AppointmentCardState extends State<AppointmentCard> {
+  String _formatDate(DateTime date) {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
+    ];
+    return '${months[date.month - 1]} ${date.day}, ${date.year}';
+  }
+
+  String _formatTime(TimeOfDay time) {
+    final hour = time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod;
+    final minute = time.minute.toString().padLeft(2, '0');
+    final period = time.period == DayPeriod.am ? 'AM' : 'PM';
+    return '$hour:$minute $period';
+  }
+
+  Future<void> _showRescheduleDialog() async {
+    DateTime? selectedDate = widget.appointment.date;
+    TimeOfDay? selectedTime = widget.appointment.time;
+
+    // Show date picker
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: selectedDate,
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2027),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: kPeach,
+              onPrimary: kInk,
+              onSurface: kInk,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (pickedDate != null) {
+      selectedDate = pickedDate;
+
+      // Show time picker
+      if (mounted) {
+        final TimeOfDay? pickedTime = await showTimePicker(
+          context: context,
+          initialTime: selectedTime,
+          builder: (context, child) {
+            return Theme(
+              data: Theme.of(context).copyWith(
+                colorScheme: ColorScheme.light(
+                  primary: kPeach,
+                  onPrimary: kInk,
+                  onSurface: kInk,
+                ),
+              ),
+              child: child!,
+            );
+          },
+        );
+
+        if (pickedTime != null) {
+          selectedTime = pickedTime;
+          widget.onReschedule(selectedDate, selectedTime);
+
+          // Show success message
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                    'Appointment rescheduled to ${_formatDate(selectedDate)} at ${_formatTime(selectedTime)}'),
+                backgroundColor: kInk,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+              ),
+            );
+          }
+        }
+      }
+    }
+  }
+
+  Future<void> _showCancelDialog() async {
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Cancel Appointment'),
+        content: Text(
+          'Are you sure you want to cancel your appointment with ${widget.appointment.name}?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('No, Keep It'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.red.shade400,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Yes, Cancel'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      widget.onCancel();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Appointment cancelled'),
+            backgroundColor: Colors.red.shade400,
+            behavior: SnackBarBehavior.floating,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -136,15 +320,17 @@ class _AppointmentCardState extends State<AppointmentCard> {
               CircleAvatar(
                 radius: 16,
                 backgroundColor: kPeach.withOpacity(0.35),
-                child: const Icon(Icons.medical_services_outlined, color: kInk, size: 16),
+                child: const Icon(Icons.person, color: kInk, size: 16),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(widget.name, style: Theme.of(context).textTheme.titleMedium),
-                    Text(widget.specialty, style: Theme.of(context).textTheme.bodySmall),
+                    Text(widget.appointment.name,
+                        style: Theme.of(context).textTheme.titleMedium),
+                    Text(widget.appointment.specialty,
+                        style: Theme.of(context).textTheme.bodySmall),
                   ],
                 ),
               ),
@@ -152,9 +338,14 @@ class _AppointmentCardState extends State<AppointmentCard> {
             ],
           ),
           const SizedBox(height: 12),
-          _InfoRow(icon: Icons.event_outlined, text: widget.date),
-          _InfoRow(icon: Icons.schedule_outlined, text: widget.time),
-          _InfoRow(icon: Icons.place_outlined, text: widget.location),
+          _InfoRow(
+              icon: Icons.event_outlined,
+              text: _formatDate(widget.appointment.date)),
+          _InfoRow(
+              icon: Icons.schedule_outlined,
+              text: _formatTime(widget.appointment.time)),
+          _InfoRow(
+              icon: Icons.place_outlined, text: widget.appointment.location),
           const SizedBox(height: 12),
           Row(
             children: [
@@ -164,16 +355,21 @@ class _AppointmentCardState extends State<AppointmentCard> {
                     backgroundColor: kBlush,
                     foregroundColor: kInk,
                     padding: const EdgeInsets.symmetric(vertical: 10),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
                   ),
-                  onPressed: () {},
-                  child: const Text('Reschedule'),
+                  onPressed: _showRescheduleDialog,
+                  child: const Text(
+                    'Reschedule',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
               TextButton(
-                onPressed: () {},
-                child: const Text('Cancel'),
+                onPressed: _showCancelDialog,
+                child: const Text('Cancel',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
               ),
             ],
           ),

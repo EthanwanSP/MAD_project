@@ -14,12 +14,70 @@ class _TeleConsultPageState extends State<TeleConsultPage> {
   Widget build(BuildContext context) {
     return Container(
       color: kPaper,
-      child: SafeArea(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            Container(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 22),
+      child: Stack(
+        children: [
+          ListView(
+            padding: const EdgeInsets.only(top: 140), // Space for fixed header
+            children: [
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  'Available now',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+              const SizedBox(height: 12),
+              const _ConsultCard(
+                name: 'Dr. Aisha Patel',
+                specialty: 'Family Medicine',
+                status: 'Online',
+              ),
+              const _ConsultCard(
+                name: 'Dr. David Lim',
+                specialty: 'Pediatrics',
+                status: 'Online',
+              ),
+              const _ConsultCard(
+                name: 'Dr. Clara Ng',
+                specialty: 'Dermatology',
+                status: 'Available in 10 min',
+              ),
+              const _ConsultCard(
+                name: 'Dr. Hui Min Ng',
+                specialty: 'Dermatology',
+                status: 'Available in 10 min',
+              ),
+              const _ConsultCard(
+                name: 'Dr. John Ng',
+                specialty: 'Dermatology',
+                status: 'Available in 15 min',
+              ),
+              const _ConsultCard(
+                name: 'Dr. Heng Ng',
+                specialty: 'Dermatology',
+                status: 'Available in 20 min',
+              ),
+              const _ConsultCard(
+                name: 'Dr. Sofia',
+                specialty: 'Dermatology',
+                status: 'Available in 25 min',
+              ),
+              const _ConsultCard(
+                name: 'Dr.Ng',
+                specialty: 'Dermatology',
+                status: 'Available in 30 min',
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
+          // Fixed header at the top
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(20, 50, 20, 22),
               decoration: const BoxDecoration(
                 color: kBlush,
                 borderRadius: BorderRadius.vertical(
@@ -62,57 +120,8 @@ class _TeleConsultPageState extends State<TeleConsultPage> {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                'Available now',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-            ),
-            const SizedBox(height: 12),
-            const _ConsultCard(
-              name: 'Dr. Aisha Patel',
-              specialty: 'Family Medicine',
-              status: 'Online',
-            ),
-            const _ConsultCard(
-              name: 'Dr. David Lim',
-              specialty: 'Pediatrics',
-              status: 'Online',
-            ),
-            const _ConsultCard(
-              name: 'Dr. Clara Ng',
-              specialty: 'Dermatology',
-              status: 'Available in 10 min',
-            ),
-            const _ConsultCard(
-              name: 'Dr. Hui Min Ng',
-              specialty: 'Dermatology',
-              status: 'Available in 10 min',
-            ),
-            const _ConsultCard(
-              name: 'Dr. John Ng',
-              specialty: 'Dermatology',
-              status: 'Available in 15 min',
-            ),
-            const _ConsultCard(
-              name: 'Dr. Heng Ng',
-              specialty: 'Dermatology',
-              status: 'Available in 20 min',
-            ),
-            const _ConsultCard(
-              name: 'Dr. Sofia',
-              specialty: 'Dermatology',
-              status: 'Available in 25 min',
-            ),
-            const _ConsultCard(
-              name: 'Dr.Ng',
-              specialty: 'Dermatology',
-              status: 'Available in 30 min',
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

@@ -97,7 +97,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                           obscureText: _ishidden,
                           decoration: InputDecoration(
                             border: InputBorder.none,
-                            hintText: 'New password',
+                            hintText: 'Enter email or mobile number',
                             prefixIcon: Icon(Icons.lock_outline),
                             suffixIcon: IconButton(
                               onPressed: () {
@@ -134,7 +134,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                           obscureText: _hide,
                           decoration: InputDecoration(
                             border: InputBorder.none,
-                            hintText: 'Confirm password',
+                            hintText: 'New password',
                             prefixIcon: const Icon(Icons.lock_outline),
                             suffixIcon: IconButton(
                               onPressed: () {

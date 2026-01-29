@@ -53,7 +53,7 @@ ThemeData buildAppTheme() {
     textTheme: GoogleFonts.ptSerifTextTheme(
       const TextTheme(
         headlineMedium: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: kInk),
-        titleLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: kInk),
+        titleLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: kInk),
         titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: kInk),
         bodyMedium: TextStyle(fontSize: 14, color: kInk),
         bodySmall: TextStyle(fontSize: 12, color: kInk),
