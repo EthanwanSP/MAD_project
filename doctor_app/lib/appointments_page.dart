@@ -48,12 +48,41 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
                     style: Theme.of(context).textTheme.titleMedium),
               ),
               const SizedBox(height: 12),
-              if (appointments.isEmpty)
+              if (_manager.isLoading)
+                Padding(
+                  padding: const EdgeInsets.all(40),
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      color: kInk,
+                      strokeWidth: 2,
+                    ),
+                  ),
+                )
+              else if (_manager.errorMessage != null)
                 Padding(
                   padding: const EdgeInsets.all(40),
                   child: Column(
                     children: [
-                      Icon(Icons.event_busy, size: 80, color: kInk.withOpacity(0.3)),
+                      Icon(Icons.error_outline,
+                          size: 64, color: kInk.withOpacity(0.4)),
+                      const SizedBox(height: 12),
+                      Text(
+                        _manager.errorMessage!,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: kInk.withOpacity(0.6),
+                            ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                )
+              else if (appointments.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(40),
+                  child: Column(
+                    children: [
+                      Icon(Icons.event_busy,
+                          size: 80, color: kInk.withOpacity(0.3)),
                       const SizedBox(height: 16),
                       Text(
                         'No appointments scheduled',
@@ -78,12 +107,12 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
                   (index) => AppointmentCard(
                     key: ValueKey(appointments[index].id),
                     appointment: appointments[index],
-                    onReschedule: (newDate, newTime) {
-                      _manager.updateAppointment(
+                    onReschedule: (newDate, newTime) async {
+                      await _manager.updateAppointment(
                           appointments[index].id, newDate, newTime);
                     },
-                    onCancel: () {
-                      _manager.removeAppointment(appointments[index].id);
+                    onCancel: () async {
+                      await _manager.cancelAppointment(appointments[index].id);
                     },
                   ),
                 ),
@@ -151,8 +180,8 @@ class AppointmentCard extends StatefulWidget {
   });
 
   final AppointmentData appointment;
-  final Function(DateTime date, TimeOfDay time) onReschedule;
-  final VoidCallback onCancel;
+  final Future<void> Function(DateTime date, TimeOfDay time) onReschedule;
+  final Future<void> Function() onCancel;
 
   @override
   State<AppointmentCard> createState() => _AppointmentCardState();
@@ -232,20 +261,32 @@ class _AppointmentCardState extends State<AppointmentCard> {
 
         if (pickedTime != null) {
           selectedTime = pickedTime;
-          widget.onReschedule(selectedDate, selectedTime);
-
-          // Show success message
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                    'Appointment rescheduled to ${_formatDate(selectedDate)} at ${_formatTime(selectedTime)}'),
-                backgroundColor: kInk,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-              ),
-            );
+          try {
+            await widget.onReschedule(selectedDate, selectedTime);
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                      'Appointment rescheduled to ${_formatDate(selectedDate)} at ${_formatTime(selectedTime)}'),
+                  backgroundColor: kInk,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                ),
+              );
+            }
+          } catch (_) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: const Text('Unable to reschedule appointment.'),
+                  backgroundColor: Colors.red.shade400,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                ),
+              );
+            }
           }
         }
       }
@@ -281,17 +322,31 @@ class _AppointmentCardState extends State<AppointmentCard> {
     );
 
     if (confirmed == true) {
-      widget.onCancel();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Appointment cancelled'),
-            backgroundColor: Colors.red.shade400,
-            behavior: SnackBarBehavior.floating,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          ),
-        );
+      try {
+        await widget.onCancel();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Appointment cancelled'),
+              backgroundColor: Colors.red.shade400,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+          );
+        }
+      } catch (_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Unable to cancel appointment.'),
+              backgroundColor: Colors.red.shade400,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+          );
+        }
       }
     }
   }

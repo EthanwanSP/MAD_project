@@ -1,5 +1,5 @@
 
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:doctor_app/calling_page.dart';
 import 'package:flutter/material.dart';
 import 'app_theme.dart';
@@ -12,6 +12,9 @@ import 'shop_page.dart';
 import 'tele_consult_page.dart';
 import 'forgot_password_page.dart';
 import 'signup_page.dart';
+
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
 void main() {
   runApp(const MyApp());
@@ -28,7 +31,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'DrConnec+',
+      title: 'Doctor + Connect',
       debugShowCheckedModeBanner: false,
       theme: buildAppTheme(),
       home: const LoginPage(),

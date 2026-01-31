@@ -49,20 +49,36 @@ class AppointmentsManager extends ChangeNotifier {
       location: 'MediConnect Specialist Clinic',
     ),
   ];
+  bool _isLoading = false;
+  String? _errorMessage;
 
   List<AppointmentData> get appointments => _appointments;
+  bool get isLoading => _isLoading;
+  String? get errorMessage => _errorMessage;
 
-  void addAppointment(AppointmentData appointment) {
-    _appointments.add(appointment);
+  Future<void> addAppointment(AppointmentData appointment) async {
+    final newAppointment = AppointmentData(
+      id: generateId(),
+      name: appointment.name,
+      specialty: appointment.specialty,
+      date: appointment.date,
+      time: appointment.time,
+      location: appointment.location,
+    );
+    _appointments.add(newAppointment);
     notifyListeners();
   }
 
-  void removeAppointment(String id) {
+  Future<void> cancelAppointment(String id) async {
     _appointments.removeWhere((apt) => apt.id == id);
     notifyListeners();
   }
 
-  void updateAppointment(String id, DateTime newDate, TimeOfDay newTime) {
+  Future<void> updateAppointment(
+    String id,
+    DateTime newDate,
+    TimeOfDay newTime,
+  ) async {
     final index = _appointments.indexWhere((apt) => apt.id == id);
     if (index != -1) {
       _appointments[index].date = newDate;

@@ -260,6 +260,7 @@ class _BookAppointmentDialogState extends State<BookAppointmentDialog> {
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
   String? _selectedLocation;
+  bool _isSubmitting = false;
 
   String _formatDate(DateTime date) {
     const months = [
@@ -336,7 +337,7 @@ class _BookAppointmentDialogState extends State<BookAppointmentDialog> {
     }
   }
 
-  void _bookAppointment() {
+  Future<void> _bookAppointment() async {
     if (_selectedDoctor == null ||
         _selectedDate == null ||
         _selectedTime == null ||
@@ -354,7 +355,7 @@ class _BookAppointmentDialogState extends State<BookAppointmentDialog> {
 
     final manager = AppointmentsManager();
     final newAppointment = AppointmentData(
-      id: manager.generateId(),
+      id: '',
       name: _selectedDoctor!.name,
       specialty: _selectedDoctor!.specialty,
       date: _selectedDate!,
@@ -362,19 +363,44 @@ class _BookAppointmentDialogState extends State<BookAppointmentDialog> {
       location: _selectedLocation!,
     );
 
-    manager.addAppointment(newAppointment);
+    setState(() {
+      _isSubmitting = true;
+    });
 
-    Navigator.of(context).pop();
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-            'Appointment booked with ${_selectedDoctor!.name} on ${_formatDate(_selectedDate!)} at ${_formatTime(_selectedTime!)}'),
-        backgroundColor: Colors.green.shade600,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-    );
+    try {
+      await manager.addAppointment(newAppointment);
+      if (mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                'Appointment booked with ${_selectedDoctor!.name} on ${_formatDate(_selectedDate!)} at ${_formatTime(_selectedTime!)}'),
+            backgroundColor: Colors.green.shade600,
+            behavior: SnackBarBehavior.floating,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Unable to book appointment. Try again.'),
+            backgroundColor: Colors.red.shade400,
+            behavior: SnackBarBehavior.floating,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
   }
 
   @override
@@ -560,7 +586,7 @@ class _BookAppointmentDialogState extends State<BookAppointmentDialog> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: FilledButton(
-                      onPressed: _bookAppointment,
+                      onPressed: _isSubmitting ? null : _bookAppointment,
                       style: FilledButton.styleFrom(
                         backgroundColor: kPeach,
                         foregroundColor: kInk,
@@ -568,8 +594,14 @@ class _BookAppointmentDialogState extends State<BookAppointmentDialog> {
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14)),
                       ),
-                      child: const Text('Book',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      child: _isSubmitting
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Text('Book',
+                              style: TextStyle(fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],
