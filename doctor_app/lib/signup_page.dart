@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:doctor_app/firebase_options.dart';
+import 'auth_session.dart';
 import 'app_theme.dart';
 import 'home_shell.dart';
 
@@ -71,6 +72,26 @@ class _SignupPageState extends State<SignupPage> {
             );
           }
           return;
+        }
+
+        final body = jsonDecode(response.body) as Map<String, dynamic>;
+        AuthSession.idToken = body['idToken']?.toString();
+        AuthSession.userId = body['localId']?.toString();
+        AuthSession.email = email;
+        if (AuthSession.idToken != null && name.isNotEmpty) {
+          final updateUri = Uri.parse(
+            'https://identitytoolkit.googleapis.com/v1/accounts:update?key=$apiKey',
+          );
+          await http.post(
+            updateUri,
+            headers: const {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'idToken': AuthSession.idToken,
+              'displayName': name,
+              'returnSecureToken': true,
+            }),
+          );
+          AuthSession.displayName = name;
         }
 
         if (mounted) {

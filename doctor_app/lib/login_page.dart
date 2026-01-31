@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:doctor_app/firebase_options.dart';
+import 'auth_session.dart';
 import 'package:lottie/lottie.dart';
 
 import 'app_theme.dart';
@@ -71,6 +72,31 @@ class _LoginPageState extends State<LoginPage> {
             );
           }
           return;
+        }
+
+        final body = jsonDecode(response.body) as Map<String, dynamic>;
+        AuthSession.idToken = body['idToken']?.toString();
+        AuthSession.userId = body['localId']?.toString();
+        AuthSession.email = email;
+        final lookupUri = Uri.parse(
+          'https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=$apiKey',
+        );
+        final lookupResponse = await http.post(
+          lookupUri,
+          headers: const {'Content-Type': 'application/json'},
+          body: jsonEncode({'idToken': AuthSession.idToken}),
+        );
+        if (lookupResponse.statusCode == 200) {
+          final lookupBody =
+              jsonDecode(lookupResponse.body) as Map<String, dynamic>;
+          final users = lookupBody['users'];
+          if (users is List && users.isNotEmpty) {
+            final displayName = users.first['displayName']?.toString();
+            AuthSession.displayName = displayName;
+          }
+        }
+        if (AuthSession.displayName == null || AuthSession.displayName!.isEmpty) {
+          AuthSession.displayName = email.split('@').first;
         }
 
         if (mounted) {

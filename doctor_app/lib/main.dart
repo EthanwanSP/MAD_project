@@ -12,6 +12,7 @@ import 'shop_page.dart';
 import 'tele_consult_page.dart';
 import 'forgot_password_page.dart';
 import 'signup_page.dart';
+import 'cart_page.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -46,6 +47,7 @@ class _MyAppState extends State<MyApp> {
         '/signUp': (_) => const SignupPage(),
         '/forgotPassword': (_) => const ForgotPassword(),
         '/calling': (_) => const CallingPage(),
+        '/cart': (_) => const CartPage(),
       },
     );
   }

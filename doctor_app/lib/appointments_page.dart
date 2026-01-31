@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'app_theme.dart';
+import 'home_dashboard.dart';
 import 'home_shell.dart';
 import 'appointments_manager.dart';
 
@@ -157,6 +158,28 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
                           ],
+                        ),
+                      ),
+                      FilledButton.icon(
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) => const BookAppointmentDialog(),
+                          );
+                        },
+                        style: FilledButton.styleFrom(
+                          backgroundColor: kInk,
+                          foregroundColor: kPaper,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        icon: const Icon(Icons.add, size: 18),
+                        label: const Text(
+                          'Add',
+                          style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),
                     ],

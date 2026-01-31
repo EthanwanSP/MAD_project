@@ -1,10 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'app_theme.dart';
 import 'home_shell.dart';
 import 'login_page.dart';
+import 'auth_session.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -44,15 +46,15 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-    final userStream = user == null
+    final user = kIsWeb ? null : FirebaseAuth.instance.currentUser;
+    final userStream = kIsWeb || user == null
         ? null
         : FirebaseFirestore.instance
             .collection('users')
             .doc(user.uid)
             .snapshots();
 
-    final purchasesStream = user == null
+    final purchasesStream = kIsWeb || user == null
         ? null
         : FirebaseFirestore.instance
             .collection('purchases')
@@ -80,63 +82,93 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                         const SizedBox(width: 14),
                         Expanded(
-                          child: StreamBuilder<
-                              DocumentSnapshot<Map<String, dynamic>>>(
-                            stream: userStream,
-                            builder: (context, snapshot) {
-                              final data = snapshot.data?.data() ?? {};
-                              final name = (data['name'] as String?) ??
-                                  (user?.displayName ?? 'User');
-                              final email = (data['email'] as String?) ??
-                                  (user?.email ?? '');
-                              final createdAt =
-                                  data['createdAt'] as Timestamp?;
-                              final memberSince = _formatMemberSince(createdAt);
-
-                              if (snapshot.connectionState ==
-                                  ConnectionState.waiting) {
-                                return Column(
+                          child: kIsWeb
+                              ? Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text('Loading...',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleMedium),
+                                    Text(
+                                      AuthSession.displayName ?? 'User',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium,
+                                    ),
                                     const SizedBox(height: 2),
                                     Text(
-                                      '',
+                                      AuthSession.email ?? '',
+                                      style:
+                                          Theme.of(context).textTheme.bodySmall,
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Member since -',
                                       style:
                                           Theme.of(context).textTheme.bodySmall,
                                     ),
                                   ],
-                                );
-                              }
+                                )
+                              : StreamBuilder<
+                                  DocumentSnapshot<Map<String, dynamic>>>(
+                                  stream: userStream,
+                                  builder: (context, snapshot) {
+                                    final data = snapshot.data?.data() ?? {};
+                                    final name = (data['name'] as String?) ??
+                                        (user?.displayName ?? 'User');
+                                    final email = (data['email'] as String?) ??
+                                        (user?.email ?? '');
+                                    final createdAt =
+                                        data['createdAt'] as Timestamp?;
+                                    final memberSince =
+                                        _formatMemberSince(createdAt);
 
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    name,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleMedium,
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    email,
-                                    style:
-                                        Theme.of(context).textTheme.bodySmall,
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    memberSince,
-                                    style:
-                                        Theme.of(context).textTheme.bodySmall,
-                                  ),
-                                ],
-                              );
-                            },
-                          ),
+                                    if (snapshot.connectionState ==
+                                        ConnectionState.waiting) {
+                                      return Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text('Loading...',
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .titleMedium),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            '',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodySmall,
+                                          ),
+                                        ],
+                                      );
+                                    }
+
+                                    return Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          name,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleMedium,
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          email,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodySmall,
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          memberSince,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodySmall,
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                ),
                         ),
                         Container(
                           padding: const EdgeInsets.symmetric(
@@ -190,62 +222,72 @@ class _ProfilePageState extends State<ProfilePage> {
                     const SizedBox(height: 10),
                     _SectionCard(
                       children: [
-                        StreamBuilder<
-                            QuerySnapshot<Map<String, dynamic>>>(
-                          stream: purchasesStream,
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              return const ListTile(
-                                leading: Icon(Icons.receipt_long_outlined),
-                                title: Text('Loading purchases...'),
-                              );
-                            }
-
-                            if (snapshot.hasError) {
-                              return const ListTile(
-                                leading: Icon(Icons.error_outline),
-                                title: Text('Unable to load purchases'),
-                              );
-                            }
-
-                            final purchases = snapshot.data?.docs ?? [];
-                            if (purchases.isEmpty) {
-                              return const ListTile(
+                        kIsWeb
+                            ? const ListTile(
                                 leading: Icon(Icons.shopping_bag_outlined),
                                 title: Text('No purchases yet'),
-                                subtitle:
-                                    Text('Shop items will appear here'),
-                              );
-                            }
+                                subtitle: Text(
+                                    'Purchases unavailable on web'),
+                              )
+                            : StreamBuilder<
+                                QuerySnapshot<Map<String, dynamic>>>(
+                                stream: purchasesStream,
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState ==
+                                      ConnectionState.waiting) {
+                                    return const ListTile(
+                                      leading:
+                                          Icon(Icons.receipt_long_outlined),
+                                      title: Text('Loading purchases...'),
+                                    );
+                                  }
 
-                            return Column(
-                              children: purchases.take(5).map((doc) {
-                                final data = doc.data();
-                                final itemName =
-                                    (data['itemName'] as String?) ?? 'Item';
-                                final price = data['price'];
-                                final quantity =
-                                    (data['quantity'] as int?) ?? 1;
-                                final purchaseDate = _formatPurchaseDate(
-                                  data['purchaseDate'] as Timestamp?,
-                                );
-                                return ListTile(
-                                  leading: const Icon(
-                                      Icons.shopping_bag_outlined),
-                                  title: Text(itemName),
-                                  subtitle:
-                                      Text('Qty $quantity - $purchaseDate'),
-                                  trailing: Text(
-                                    price is num
-                                        ? '\$${price.toStringAsFixed(2)}'
-                                        : '',
-                                  ),
-                                );
-                              }).toList(),
-                            );
-                          },
-                        ),
+                                  if (snapshot.hasError) {
+                                    return const ListTile(
+                                      leading: Icon(Icons.error_outline),
+                                      title: Text('Unable to load purchases'),
+                                    );
+                                  }
+
+                                  final purchases = snapshot.data?.docs ?? [];
+                                  if (purchases.isEmpty) {
+                                    return const ListTile(
+                                      leading:
+                                          Icon(Icons.shopping_bag_outlined),
+                                      title: Text('No purchases yet'),
+                                      subtitle:
+                                          Text('Shop items will appear here'),
+                                    );
+                                  }
+
+                                  return Column(
+                                    children: purchases.take(5).map((doc) {
+                                      final data = doc.data();
+                                      final itemName =
+                                          (data['itemName'] as String?) ??
+                                              'Item';
+                                      final price = data['price'];
+                                      final quantity =
+                                          (data['quantity'] as int?) ?? 1;
+                                      final purchaseDate = _formatPurchaseDate(
+                                        data['purchaseDate'] as Timestamp?,
+                                      );
+                                      return ListTile(
+                                        leading: const Icon(
+                                            Icons.shopping_bag_outlined),
+                                        title: Text(itemName),
+                                        subtitle: Text(
+                                            'Qty $quantity - $purchaseDate'),
+                                        trailing: Text(
+                                          price is num
+                                              ? '\$${price.toStringAsFixed(2)}'
+                                              : '',
+                                        ),
+                                      );
+                                    }).toList(),
+                                  );
+                                },
+                              ),
                       ],
                     ),
                     const SizedBox(height: 18),

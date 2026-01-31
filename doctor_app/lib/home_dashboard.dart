@@ -1,8 +1,11 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 
 import 'app_theme.dart';
 import 'appointments_manager.dart';
+import 'auth_session.dart';
 
 class HomeDashboard extends StatefulWidget {
   const HomeDashboard({super.key});
@@ -32,6 +35,9 @@ class _HomeDashboardState extends State<HomeDashboard> {
 
   @override
   Widget build(BuildContext context) {
+    final String displayName = kIsWeb
+        ? (AuthSession.displayName ?? 'User')
+        : (FirebaseAuth.instance.currentUser?.displayName ?? 'User');
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -62,7 +68,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     Text(
-                      'Jon Doe!',
+                      '$displayName!',
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                   ],
@@ -382,11 +388,11 @@ class _BookAppointmentDialogState extends State<BookAppointmentDialog> {
           ),
         );
       }
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Unable to book appointment. Try again.'),
+            content: Text('Unable to book appointment: $e'),
             backgroundColor: Colors.red.shade400,
             behavior: SnackBarBehavior.floating,
             shape:
