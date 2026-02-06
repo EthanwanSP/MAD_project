@@ -1,8 +1,16 @@
+import 'dart:convert';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 
 import 'app_theme.dart';
+import 'auth_session.dart';
 import 'cart_manager.dart';
+import 'firebase_options.dart';
 
 class CartPage extends StatefulWidget {
   const CartPage({super.key});
@@ -45,6 +53,161 @@ class _CartPageState extends State<CartPage> {
       final controller = _controllerFor(item);
       if (controller.text != item.quantity.toString()) {
         controller.text = item.quantity.toString();
+      }
+    }
+  }
+
+  Future<void> _confirmCart() async {
+    final items = _cartManager.items;
+    if (items.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Your cart is empty'),
+          backgroundColor: Colors.red.shade400,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+      return;
+    }
+
+    if (kIsWeb) {
+      await _confirmCartWeb(items);
+      return;
+    }
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Please sign in to confirm purchases'),
+          backgroundColor: Colors.red.shade400,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+      return;
+    }
+
+    try {
+      final batch = FirebaseFirestore.instance.batch();
+      final userPurchases = FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('purchases');
+      for (final item in items) {
+        final payload = {
+          'userId': user.uid,
+          'itemId': item.id,
+          'itemName': item.title,
+          'price': item.price,
+          'quantity': item.quantity,
+          'purchaseDate': FieldValue.serverTimestamp(),
+        };
+        batch.set(userPurchases.doc(), payload);
+      }
+      await batch.commit();
+
+      if (mounted) {
+        _cartManager.clear();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Cart saved to purchases'),
+            backgroundColor: Colors.green.shade600,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Unable to confirm cart: $e'),
+            backgroundColor: Colors.red.shade400,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _confirmCartWeb(List<CartItem> items) async {
+    if (!AuthSession.isSignedIn) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Please sign in to confirm purchases'),
+            backgroundColor: Colors.red.shade400,
+            behavior: SnackBarBehavior.floating,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+      return;
+    }
+
+    final projectId = DefaultFirebaseOptions.currentPlatform.projectId;
+    final baseUserPurchasesUri = Uri.parse(
+      'https://firestore.googleapis.com/v1/projects/$projectId/databases/(default)/documents/users/${AuthSession.userId}/purchases',
+    );
+
+    try {
+      for (final item in items) {
+        final docId = DateTime.now().microsecondsSinceEpoch.toString();
+        final userPurchasesUri =
+            Uri.parse('${baseUserPurchasesUri.toString()}?documentId=$docId');
+        final body = {
+          'fields': {
+            'userId': {'stringValue': AuthSession.userId},
+            'itemId': {'stringValue': item.id},
+            'itemName': {'stringValue': item.title},
+            'price': {'doubleValue': item.price},
+            'quantity': {'integerValue': item.quantity},
+            'purchaseDate': {
+              'timestampValue': DateTime.now().toUtc().toIso8601String()
+            },
+          },
+        };
+
+        final userPurchasesResponse = await http.post(
+          userPurchasesUri,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ${AuthSession.idToken}',
+          },
+          body: jsonEncode(body),
+        );
+        if (userPurchasesResponse.statusCode != 200) {
+          throw Exception('HTTP ${userPurchasesResponse.statusCode}');
+        }
+      }
+
+      if (mounted) {
+        _cartManager.clear();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Cart saved to purchases'),
+            backgroundColor: Colors.green.shade600,
+            behavior: SnackBarBehavior.floating,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Unable to confirm cart: $e'),
+            backgroundColor: Colors.red.shade400,
+            behavior: SnackBarBehavior.floating,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
       }
     }
   }
@@ -194,11 +357,11 @@ class _CartPageState extends State<CartPage> {
                 const SizedBox(height: 10),
                 SizedBox(
                   width: double.infinity,
-                  child: OutlinedButton(
-                    onPressed: () {},
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: kInk,
-                      side: BorderSide(color: kInk.withOpacity(0.4)),
+                  child: FilledButton(
+                    onPressed: _confirmCart,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: kInk,
+                      foregroundColor: kPaper,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),

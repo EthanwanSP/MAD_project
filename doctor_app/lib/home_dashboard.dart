@@ -6,6 +6,8 @@ import 'package:lottie/lottie.dart';
 import 'app_theme.dart';
 import 'appointments_manager.dart';
 import 'auth_session.dart';
+import 'app_colors.dart';
+import 'services/booking_service.dart';
 
 class HomeDashboard extends StatefulWidget {
   const HomeDashboard({super.key});
@@ -18,6 +20,12 @@ class _HomeDashboardState extends State<HomeDashboard> {
   final TextEditingController _homesearch = TextEditingController();
   final PageController _pageController = PageController();
   int _currentPage = 0;
+
+  static const double _pad = 16;
+  static const double _padSm = 12;
+  static const double _padLg = 24;
+  static const double _cardRadius = 16;
+  static const double _tileRadius = 14;
 
   @override
   void dispose() {
@@ -38,215 +46,395 @@ class _HomeDashboardState extends State<HomeDashboard> {
     final String displayName = kIsWeb
         ? (AuthSession.displayName ?? 'User')
         : (FirebaseAuth.instance.currentUser?.displayName ?? 'User');
+
     return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            const Color.fromARGB(255, 255, 217, 196),
-            const Color.fromARGB(255, 255, 245, 248)
-          ],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-      ),
-      child: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-          children: [
-            Row(
-              children: [
-                Lottie.network(
-                  'https://lottie.host/4c68f94b-88dd-40cb-a7b8-f1f4d952e1ca/gsZRXU1w06.json',
-                  height: 70,
-                  width: 70,
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Welcome in,',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    Text(
-                      '$displayName!',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ],
-                ),
-                const Spacer(),
-                IconButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/profilePage');
-                  },
-                  iconSize: 30,
-                  style: IconButton.styleFrom(backgroundColor: Colors.white),
-                  icon: const Icon(Icons.person),
-                ),
-              ],
-            ),
-            const SizedBox(height: 30),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(19),
+      color: kPaper,
+      child: Stack(
+        children: [
+          ListView(
+            padding: const EdgeInsets.fromLTRB(_pad, 176, _pad, _padLg),
+            children: [
+              _SectionHeader(
+                title: 'Quick Actions',
+                subtitle: 'What would you like to do today?',
               ),
-              child: TextField(
-                controller: _homesearch,
-                decoration: InputDecoration(
-                  prefixIcon: Icon(Icons.search),
-                  border: InputBorder.none,
-                  hintText: 'How can we help you today?',
-                ),
-              ),
-            ),
-            const SizedBox(height: 30),
-            Row(
-              children: [
-                FilledButton(
-                  onPressed: _showBookingDialog,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: const Color.fromARGB(255, 255, 123, 0),
-                    foregroundColor: Colors.black,
-                    minimumSize: Size(180, 55),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.calendar_month,
-                        size: 25,
-                      ),
-                      Text('Book Appointment',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                ),
-                SizedBox(width: 10),
-                FilledButton(
-                  onPressed: () {},
-                  style: FilledButton.styleFrom(
-                    backgroundColor: kPaper,
-                    foregroundColor: kInk,
-                    minimumSize: Size(180, 55),
-                  ),
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.timelapse,
-                        size: 25,
-                      ),
-                      Text('Schedule later',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 18),
-            Text(
-              'Quick services',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 120,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: [
+              const SizedBox(height: _padSm),
+              _QuickActionsGrid(
+                tiles: [
                   ActionTile(
                     icon: Icons.assignment_outlined,
-                    label: 'My Appointments',
-                    iconColor: Colors.blue,
-                    onTap: () => Navigator.of(context).pushNamed('/appointments'),
+                    label: 'Appointments',
+                    iconColor: AppColors.tintBlue,
+                    onTap: () =>
+                        Navigator.of(context).pushNamed('/appointments'),
                   ),
-                  const SizedBox(width: 10),
                   ActionTile(
                     icon: Icons.storefront_outlined,
                     label: 'Pharmacy',
-                    iconColor: Colors.green,
+                    iconColor: AppColors.tintGreen,
                     onTap: () => Navigator.of(context).pushNamed('/shop'),
                   ),
-                  const SizedBox(width: 10),
                   ActionTile(
                     icon: Icons.confirmation_number_outlined,
-                    label: 'Queue No.',
-                    iconColor: Colors.orange,
+                    label: 'Queue',
+                    iconColor: AppColors.tintAmber,
                     onTap: () => Navigator.of(context).pushNamed('/queue'),
                   ),
-                  const SizedBox(width: 10),
                   ActionTile(
                     icon: Icons.calendar_month_outlined,
                     label: 'Calendar',
-                    iconColor: Colors.purple,
+                    iconColor: AppColors.tintPurple,
                     onTap: () => Navigator.of(context).pushNamed('/calendar'),
                   ),
-                  const SizedBox(width: 10),
                   ActionTile(
                     icon: Icons.video_camera_front_outlined,
                     label: 'Tele-consult',
-                    iconColor: Colors.red,
+                    iconColor: AppColors.tintRose,
                     onTap: () => Navigator.of(context).pushNamed('/teleconsult'),
                   ),
-                  const SizedBox(width: 10),
                   ActionTile(
                     icon: Icons.map_outlined,
-                    label: 'Hospitals nearby',
-                    iconColor: Colors.teal,
+                    label: 'Hospitals',
+                    iconColor: AppColors.tintTeal,
                     onTap: () => Navigator.of(context).pushNamed('/hospitals'),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 25),
-            Text('Your health, Our priority!',
-                style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 12),
-            // PageView with smooth sliding
-            SizedBox(
-              height: 180,
-              child: PageView(
+              const SizedBox(height: _padLg),
+              _SectionHeader(
+                title: 'Your health, Our priority!',
+              ),
+              const SizedBox(height: _padSm),
+              _HealthCarousel(
                 controller: _pageController,
+                currentPage: _currentPage,
                 onPageChanged: (index) {
                   setState(() {
                     _currentPage = index;
                   });
                 },
-                children: [
-                  PromotionSlide(
-                    imageUrl:
-                        'https://northshorehealth.org/wp-content/uploads/Hydration-Blog-980x551-1.webp',
-                  ),
-                  PromotionSlide(
-                    imageUrl:
-                        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRb_j-hJDHqXw7gefhLpUgSVkSzRGcFxxnMqg&s',
-                  ),
-                  PromotionSlide(
-                    imageUrl:
-                        'https://graciousquotes.com/wp-content/uploads/2022/11/To-enjoy-the-glow-of-good-health-you-must-exercise.-Gene-Tunney.jpg',
-                  ),
-                ],
               ),
-            ),
-            const SizedBox(height: 12),
-            // Page Indicator
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                3,
-                (index) => AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  height: 8,
-                  width: _currentPage == index ? 24 : 8,
-                  decoration: BoxDecoration(
-                    color: _currentPage == index ? kInk : kInk.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
+            ],
+          ),
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(20, 36, 20, 14),
+              decoration: const BoxDecoration(
+                color: kBlush,
+                borderRadius: BorderRadius.vertical(
+                  bottom: Radius.circular(24),
                 ),
               ),
+              child: _HomeHeaderCard(
+                displayName: displayName,
+                onProfileTap: () =>
+                    Navigator.pushNamed(context, '/profilePage'),
+              ),
             ),
-            const SizedBox(height: 18),
-          ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HomeHeaderCard extends StatelessWidget {
+  const _HomeHeaderCard({
+    required this.displayName,
+    required this.onProfileTap,
+  });
+
+  final String displayName;
+  final VoidCallback onProfileTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: _HomeDashboardState._pad,
+        vertical: 8,
+      ),
+      decoration: const BoxDecoration(
+        color: kBlush,
+      ),
+      child: Row(
+        children: [
+          InkWell(
+            onTap: onProfileTap,
+            borderRadius: BorderRadius.circular(24),
+            child: CircleAvatar(
+              radius: 22,
+              backgroundColor: Colors.white,
+              child: const Icon(Icons.person, color: AppColors.textPrimary),
+            ),
+          ),
+          const SizedBox(width: _HomeDashboardState._padSm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Welcome',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 18,
+                        letterSpacing: -0.2,
+                        color: AppColors.textPrimary,
+                      ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  displayName,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: -0.1,
+                        color: AppColors.textPrimary,
+                      ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'How are you feeling today?',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textPrimary.withOpacity(0.7),
+                      ),
+                ),
+              ],
+            ),
+          ),
+          Lottie.network(
+            'https://lottie.host/4c68f94b-88dd-40cb-a7b8-f1f4d952e1ca/gsZRXU1w06.json',
+            height: 56,
+            width: 56,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.title, this.subtitle});
+
+  final String title;
+  final String? subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                fontSize: 18,
+                letterSpacing: -0.2,
+                color: AppColors.textPrimary,
+              ),
+        ),
+        if (subtitle != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            subtitle!,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _QuickActionsGrid extends StatelessWidget {
+  const _QuickActionsGrid({required this.tiles});
+
+  final List<Widget> tiles;
+
+  @override
+  Widget build(BuildContext context) {
+    return GridView.count(
+      crossAxisCount: 3,
+      crossAxisSpacing: 12,
+      mainAxisSpacing: 12,
+      childAspectRatio: 1.05,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      children: tiles,
+    );
+  }
+}
+
+class _HealthCarousel extends StatelessWidget {
+  const _HealthCarousel({
+    required this.controller,
+    required this.currentPage,
+    required this.onPageChanged,
+  });
+
+  final PageController controller;
+  final int currentPage;
+  final ValueChanged<int> onPageChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        SizedBox(
+          height: 170,
+          child: PageView(
+            controller: controller,
+            onPageChanged: onPageChanged,
+            children: const [
+              PromotionSlide(
+                imageUrl:
+                    'https://northshorehealth.org/wp-content/uploads/Hydration-Blog-980x551-1.webp',
+              ),
+              PromotionSlide(
+                imageUrl:
+                    'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRb_j-hJDHqXw7gefhLpUgSVkSzRGcFxxnMqg&s',
+              ),
+              PromotionSlide(
+                imageUrl:
+                    'https://images.hindustantimes.com/rf/image_size_960x540/HT/p2/2020/06/30/Pictures/_59e23780-baa1-11ea-b411-fb55c265b659.jpg',
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(
+            3,
+            (index) => AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              height: 6,
+              width: currentPage == index ? 18 : 6,
+              decoration: BoxDecoration(
+                color: currentPage == index
+                    ? AppColors.primary
+                    : AppColors.textSecondary.withOpacity(0.35),
+                borderRadius: BorderRadius.circular(6),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class PromotionSlide extends StatelessWidget {
+  const PromotionSlide({
+    super.key,
+    required this.imageUrl,
+  });
+
+  final String imageUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.network(imageUrl, fit: BoxFit.cover),
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.black.withOpacity(0.2),
+                  Colors.transparent,
+                ],
+                begin: Alignment.bottomCenter,
+                end: Alignment.topCenter,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ActionTile extends StatefulWidget {
+  const ActionTile({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.iconColor,
+    this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color iconColor;
+  final VoidCallback? onTap;
+
+  @override
+  State<ActionTile> createState() => _ActionTileState();
+}
+
+class _ActionTileState extends State<ActionTile> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedScale(
+      scale: _pressed ? 0.98 : 1,
+      duration: const Duration(milliseconds: 120),
+      child: Material(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(_HomeDashboardState._tileRadius),
+        elevation: 0,
+        child: InkWell(
+          borderRadius:
+              BorderRadius.circular(_HomeDashboardState._tileRadius),
+          onTapDown: (_) => setState(() => _pressed = true),
+          onTapCancel: () => setState(() => _pressed = false),
+          onTapUp: (_) => setState(() => _pressed = false),
+          onTap: () {
+            if (widget.onTap != null) {
+              widget.onTap!();
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('${widget.label} opened')),
+              );
+            }
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  height: 56,
+                  width: 56,
+                  decoration: BoxDecoration(
+                    color: widget.iconColor.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(widget.icon, color: kInk, size: 28),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  widget.label,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.1,
+                        color: AppColors.textPrimary,
+                      ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -267,6 +455,8 @@ class _BookAppointmentDialogState extends State<BookAppointmentDialog> {
   TimeOfDay? _selectedTime;
   String? _selectedLocation;
   bool _isSubmitting = false;
+  final List<TimeOfDay> _timeSlots =
+      List.generate(9, (index) => TimeOfDay(hour: 9 + index, minute: 0));
 
   String _formatDate(DateTime date) {
     const months = [
@@ -291,6 +481,10 @@ class _BookAppointmentDialogState extends State<BookAppointmentDialog> {
     final minute = time.minute.toString().padLeft(2, '0');
     final period = time.period == DayPeriod.am ? 'AM' : 'PM';
     return '$hour:$minute $period';
+  }
+
+  String _formatTime24(TimeOfDay time) {
+    return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
   }
 
   Future<void> _selectDate() async {
@@ -320,19 +514,41 @@ class _BookAppointmentDialogState extends State<BookAppointmentDialog> {
   }
 
   Future<void> _selectTime() async {
-    final TimeOfDay? picked = await showTimePicker(
+    final TimeOfDay? picked = await showModalBottomSheet<TimeOfDay>(
       context: context,
-      initialTime: _selectedTime ?? TimeOfDay.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: kPeach,
-              onPrimary: kInk,
-              onSurface: kInk,
-            ),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 10,
+            runSpacing: 10,
+            children: _timeSlots.map((slot) {
+              return InkWell(
+                borderRadius: BorderRadius.circular(24),
+                onTap: () => Navigator.of(context).pop(slot),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: kPeach.withOpacity(0.25),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: kInk.withOpacity(0.15)),
+                  ),
+                  child: Text(
+                    _formatTime(slot),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: kInk,
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                ),
+              );
+            }).toList(),
           ),
-          child: child!,
         );
       },
     );
@@ -358,7 +574,26 @@ class _BookAppointmentDialogState extends State<BookAppointmentDialog> {
       );
       return;
     }
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final chosenDate = DateTime(
+      _selectedDate!.year,
+      _selectedDate!.month,
+      _selectedDate!.day,
+    );
+    if (chosenDate.isBefore(today)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Please choose today or a future date'),
+          backgroundColor: Colors.red.shade400,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+      return;
+    }
 
+    final bookingService = BookingService();
     final manager = AppointmentsManager();
     final newAppointment = AppointmentData(
       id: '',
@@ -374,13 +609,23 @@ class _BookAppointmentDialogState extends State<BookAppointmentDialog> {
     });
 
     try {
-      await manager.addAppointment(newAppointment);
+      final result = await bookingService.createBookingAndAssignQueue(
+        appointment: newAppointment,
+        clinicId: _selectedLocation!,
+        serviceId: _selectedDoctor!.name,
+        bookingDate: _selectedDate!,
+        time: _selectedTime!,
+        slotId: _formatTime24(_selectedTime!),
+      );
+      if (kIsWeb) {
+        await manager.refreshWeb();
+      }
       if (mounted) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-                'Appointment booked with ${_selectedDoctor!.name} on ${_formatDate(_selectedDate!)} at ${_formatTime(_selectedTime!)}'),
+                'Appointment booked with ${_selectedDoctor!.name} on ${_formatDate(_selectedDate!)} at ${_formatTime(_selectedTime!)}. Your queue number is ${result.queueNumber}.'),
             backgroundColor: Colors.green.shade600,
             behavior: SnackBarBehavior.floating,
             shape:
@@ -613,102 +858,6 @@ class _BookAppointmentDialogState extends State<BookAppointmentDialog> {
                 ],
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// Simplified Promotion Slide Widget - Only Image
-class PromotionSlide extends StatelessWidget {
-  const PromotionSlide({
-    super.key,
-    required this.imageUrl,
-  });
-
-  final String imageUrl;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 8),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        image: DecorationImage(
-          image: NetworkImage(imageUrl),
-          fit: BoxFit.cover,
-        ),
-      ),
-    );
-  }
-}
-
-class ActionTile extends StatefulWidget {
-  const ActionTile({
-    super.key,
-    required this.icon,
-    required this.label,
-    required this.iconColor,
-    this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final Color iconColor;
-  final VoidCallback? onTap;
-
-  @override
-  State<ActionTile> createState() => _ActionTileState();
-}
-
-class _ActionTileState extends State<ActionTile> {
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 100,
-      height: 100,
-      child: Material(
-        color: kPaper,
-        borderRadius: BorderRadius.circular(18),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(18),
-          onTap: () {
-            if (widget.onTap != null) {
-              widget.onTap!();
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('${widget.label} opened')),
-              );
-            }
-          },
-          child: Padding(
-            padding: const EdgeInsets.all(8),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  height: 48,
-                  width: 48,
-                  decoration: BoxDecoration(
-                    color: widget.iconColor.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Icon(widget.icon, color: widget.iconColor, size: 28),
-                ),
-                const SizedBox(height: 6),
-                Flexible(
-                  child: Text(
-                    widget.label,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 11,
-                        ),
-                  ),
-                ),
-              ],
-            ),
           ),
         ),
       ),

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'appointments_page.dart';
 import 'home_dashboard.dart';
 import 'profile_page.dart';
-import 'shop_page.dart';
+import 'screens/pharmacy_screen.dart';
 
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
@@ -20,7 +20,7 @@ class _HomeShellState extends State<HomeShell> {
     final pages = [
       const HomeDashboard(),
       const AppointmentsPage(),
-      const ShopPage(),
+      const PharmacyScreen(),
       const ProfilePage(),
     ];
 
@@ -33,10 +33,14 @@ class _HomeShellState extends State<HomeShell> {
           setState(() => _selectedIndex = value);
         },
         destinations: const [
-          NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Home'),
-          NavigationDestination(icon: Icon(Icons.event_available_outlined), label: 'Bookings'),
-          NavigationDestination(icon: Icon(Icons.storefront_outlined), label: 'Shop'),
-          NavigationDestination(icon: Icon(Icons.person_outline), label: 'Profile'),
+          NavigationDestination(
+              icon: Icon(Icons.home_outlined), label: ''),
+          NavigationDestination(
+              icon: Icon(Icons.event_available_outlined), label: ''),
+          NavigationDestination(
+              icon: Icon(Icons.storefront_outlined), label: ''),
+          NavigationDestination(
+              icon: Icon(Icons.person_outline), label: ''),
         ],
       ),
     );

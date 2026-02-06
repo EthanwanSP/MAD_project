@@ -211,6 +211,8 @@ class AppointmentCard extends StatefulWidget {
 }
 
 class _AppointmentCardState extends State<AppointmentCard> {
+  final List<TimeOfDay> _timeSlots =
+      List.generate(9, (index) => TimeOfDay(hour: 9 + index, minute: 0));
   String _formatDate(DateTime date) {
     const months = [
       'Jan',
@@ -241,12 +243,12 @@ class _AppointmentCardState extends State<AppointmentCard> {
     TimeOfDay? selectedTime = widget.appointment.time;
 
     // Show date picker
-    final DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: selectedDate,
-      firstDate: DateTime.now(),
-      lastDate: DateTime(2027),
-      builder: (context, child) {
+      final DateTime? pickedDate = await showDatePicker(
+        context: context,
+        initialDate: selectedDate ?? DateTime.now(),
+        firstDate: DateTime.now(),
+        lastDate: DateTime(2027),
+        builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: ColorScheme.light(
@@ -265,19 +267,43 @@ class _AppointmentCardState extends State<AppointmentCard> {
 
       // Show time picker
       if (mounted) {
-        final TimeOfDay? pickedTime = await showTimePicker(
+        final TimeOfDay? pickedTime =
+            await showModalBottomSheet<TimeOfDay>(
           context: context,
-          initialTime: selectedTime,
-          builder: (context, child) {
-            return Theme(
-              data: Theme.of(context).copyWith(
-                colorScheme: ColorScheme.light(
-                  primary: kPeach,
-                  onPrimary: kInk,
-                  onSurface: kInk,
-                ),
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          builder: (context) {
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+              child: Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 10,
+                runSpacing: 10,
+                children: _timeSlots.map((slot) {
+                  return InkWell(
+                    borderRadius: BorderRadius.circular(24),
+                    onTap: () => Navigator.of(context).pop(slot),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: kPeach.withOpacity(0.25),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: kInk.withOpacity(0.15)),
+                      ),
+                      child: Text(
+                        _formatTime(slot),
+                        style:
+                            Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: kInk,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                      ),
+                    ),
+                  );
+                }).toList(),
               ),
-              child: child!,
             );
           },
         );

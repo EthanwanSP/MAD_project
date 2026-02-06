@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -7,7 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:doctor_app/firebase_options.dart';
 import 'auth_session.dart';
 import 'app_theme.dart';
-import 'home_shell.dart';
+import 'back_icon_button.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -93,13 +94,33 @@ class _SignupPageState extends State<SignupPage> {
           );
           AuthSession.displayName = name;
         }
+        if (AuthSession.userId != null) {
+          final projectId = DefaultFirebaseOptions.currentPlatform.projectId;
+          final userUri = Uri.parse(
+            'https://firestore.googleapis.com/v1/projects/$projectId/databases/(default)/documents/users/${AuthSession.userId}',
+          );
+          final userBody = {
+            'fields': {
+              'userId': {'stringValue': AuthSession.userId},
+              'name': {'stringValue': name},
+              'email': {'stringValue': email},
+              'createdAt': {
+                'timestampValue': DateTime.now().toUtc().toIso8601String()
+              },
+            },
+          };
+          await http.patch(
+            userUri,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ${AuthSession.idToken}',
+            },
+            body: jsonEncode(userBody),
+          );
+        }
 
         if (mounted) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (_) => const HomeShell(),
-            ),
-          );
+          Navigator.of(context).pushReplacementNamed('/login');
         }
         return;
       }
@@ -109,14 +130,16 @@ class _SignupPageState extends State<SignupPage> {
       final user = credential.user;
       if (user != null) {
         await user.updateDisplayName(name);
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+          'userId': user.uid,
+          'name': name,
+          'email': email,
+          'createdAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
       }
 
       if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (_) => const HomeShell(),
-          ),
-        );
+        Navigator.of(context).pushReplacementNamed('/login');
       }
     } on FirebaseAuthException catch (e) {
       if (mounted) {
@@ -171,14 +194,11 @@ class _SignupPageState extends State<SignupPage> {
                 SizedBox(height: 40),
                 Padding(
                   padding: const EdgeInsets.all(20.0),
-                  child: FloatingActionButton(
+                  child: SquareBackButton(
                     onPressed: () {
                       Navigator.pop(context);
                       Navigator.pushNamed(context, '/login');
                     },
-                    backgroundColor: kInk,
-                    foregroundColor: Colors.white,
-                    child: Icon(Icons.arrow_back),
                   ),
                 ),
                 SizedBox(height: 20),

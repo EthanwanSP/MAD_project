@@ -57,6 +57,11 @@ class CartManager extends ChangeNotifier {
     notifyListeners();
   }
 
+  void clear() {
+    _items.clear();
+    notifyListeners();
+  }
+
   double get total {
     double sum = 0;
     for (final item in _items) {

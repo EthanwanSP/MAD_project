@@ -17,6 +17,10 @@ class AppointmentData {
   TimeOfDay time;
   String location;
   String status;
+  int? queueNumber;
+  String? clinicId;
+  String? serviceId;
+  String? slotId;
   String? userId;
   String? doctorId;
   String? notes;
@@ -29,6 +33,10 @@ class AppointmentData {
     required this.time,
     required this.location,
     this.status = 'upcoming',
+    this.queueNumber,
+    this.clinicId,
+    this.serviceId,
+    this.slotId,
     this.userId,
     this.doctorId,
     this.notes,
@@ -56,6 +64,15 @@ class AppointmentData {
       location:
           (data['clinicName'] as String?) ?? (data['location'] as String?) ?? '',
       status: (data['status'] as String?) ?? 'upcoming',
+      queueNumber: (data['queueNumber'] as num?)?.toInt(),
+      clinicId: data['clinicId'] as String? ??
+          (data['clinicName'] as String?) ??
+          (data['location'] as String?),
+      serviceId: data['serviceId'] as String? ??
+          (data['doctorId'] as String?) ??
+          (data['doctorName'] as String?),
+      slotId: data['slotId'] as String? ??
+          (data['appointmentTime'] as String?),
       userId: data['userId'] as String?,
       doctorId: data['doctorId'] as String?,
       notes: data['notes'] as String?,
@@ -65,6 +82,10 @@ class AppointmentData {
   Map<String, dynamic> toFirestore({
     required String userId,
     required String appointmentId,
+    int? queueNumber,
+    String? clinicId,
+    String? serviceId,
+    String? slotId,
   }) {
     final DateTime dateOnly = DateTime(date.year, date.month, date.day);
     final DateTime dateTime =
@@ -82,6 +103,11 @@ class AppointmentData {
       'appointmentDateTime': Timestamp.fromDate(dateTime),
       'status': status,
       'notes': notes,
+      'queueNumber': queueNumber,
+      'clinicId': clinicId ?? location,
+      'serviceId': serviceId ?? doctorId ?? name,
+      'slotId': slotId ?? _formatTime24(time),
+      'bookingDate': Timestamp.fromDate(dateOnly),
       'createdAt': FieldValue.serverTimestamp(),
     };
   }
@@ -110,9 +136,34 @@ class AppointmentsManager extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
+  Future<void> refreshWeb() async {
+    if (!kIsWeb) return;
+    await _loadWebAppointments(this);
+  }
+
   void _bindAuth() {
     if (kIsWeb) {
-      _loadWebAppointments(this);
+      _authSubscription =
+          FirebaseAuth.instance.authStateChanges().listen((user) async {
+        if (user == null) {
+          AuthSession.clear();
+          _appointments = [];
+          _isLoading = false;
+          _errorMessage = null;
+          notifyListeners();
+          return;
+        }
+        AuthSession.userId = user.uid;
+        AuthSession.email = user.email ?? '';
+        AuthSession.displayName =
+            user.displayName?.trim().isNotEmpty == true
+                ? user.displayName!
+                : (user.email?.split('@').first ?? 'User');
+        try {
+          AuthSession.idToken = await user.getIdToken();
+        } catch (_) {}
+        await _loadWebAppointments(this);
+      });
       return;
     }
     _authSubscription = _auth!.authStateChanges().listen((user) {
@@ -128,8 +179,9 @@ class AppointmentsManager extends ChangeNotifier {
       _isLoading = true;
       notifyListeners();
       _appointmentsSubscription = _db!
+          .collection('users')
+          .doc(user.uid)
           .collection('appointments')
-          .where('userId', isEqualTo: user.uid)
           .snapshots()
           .listen(
         (snapshot) {
@@ -158,7 +210,11 @@ class AppointmentsManager extends ChangeNotifier {
     if (user == null) {
       throw Exception('User not authenticated.');
     }
-    final doc = _db!.collection('appointments').doc();
+    final doc = _db!
+        .collection('users')
+        .doc(user.uid)
+        .collection('appointments')
+        .doc();
     await doc.set(
       appointment.toFirestore(userId: user.uid, appointmentId: doc.id),
     );
@@ -169,7 +225,16 @@ class AppointmentsManager extends ChangeNotifier {
       await _webDeleteAppointment(id);
       return;
     }
-    await _db!.collection('appointments').doc(id).delete();
+    final user = _auth!.currentUser;
+    if (user == null) {
+      throw Exception('User not authenticated.');
+    }
+    await _db!
+        .collection('users')
+        .doc(user.uid)
+        .collection('appointments')
+        .doc(id)
+        .delete();
   }
 
   Future<void> updateAppointment(
@@ -190,7 +255,16 @@ class AppointmentsManager extends ChangeNotifier {
       newTime.hour,
       newTime.minute,
     );
-    await _db!.collection('appointments').doc(id).update({
+    final user = _auth!.currentUser;
+    if (user == null) {
+      throw Exception('User not authenticated.');
+    }
+    await _db!
+        .collection('users')
+        .doc(user.uid)
+        .collection('appointments')
+        .doc(id)
+        .update({
       'appointmentDate': Timestamp.fromDate(dateOnly),
       'appointmentTime': _formatTime24(newTime),
       'appointmentDateTime': Timestamp.fromDate(dateTime),
@@ -221,40 +295,36 @@ Future<void> _setWebError(
 }
 
 Future<void> _loadWebAppointments(AppointmentsManager manager) async {
-  if (!AuthSession.isSignedIn) {
+  final user = FirebaseAuth.instance.currentUser;
+  if (user == null) {
     await _setWebError(manager, 'Please login to view appointments.');
     return;
   }
 
+  final token = await user.getIdToken();
+  AuthSession.userId = user.uid;
+  AuthSession.email = user.email ?? '';
+  AuthSession.displayName =
+      user.displayName?.trim().isNotEmpty == true
+          ? user.displayName!
+          : (user.email?.split('@').first ?? 'User');
+  AuthSession.idToken = token;
+
+  manager._appointments = [];
   manager._isLoading = true;
   manager._errorMessage = null;
   manager.notifyListeners();
 
   final projectId = DefaultFirebaseOptions.currentPlatform.projectId;
   final uri = Uri.parse(
-    'https://firestore.googleapis.com/v1/projects/$projectId/databases/(default)/documents:runQuery',
+    'https://firestore.googleapis.com/v1/projects/$projectId/databases/(default)/documents/users/${user.uid}/appointments',
   );
 
-  final response = await http.post(
+  final response = await http.get(
     uri,
     headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ${AuthSession.idToken}',
+      'Authorization': 'Bearer $token',
     },
-    body: jsonEncode({
-      'structuredQuery': {
-        'from': [
-          {'collectionId': 'appointments'}
-        ],
-        'where': {
-          'fieldFilter': {
-            'field': {'fieldPath': 'userId'},
-            'op': 'EQUAL',
-            'value': {'stringValue': AuthSession.userId},
-          }
-        },
-      },
-    }),
   );
 
   if (response.statusCode != 200) {
@@ -262,13 +332,11 @@ Future<void> _loadWebAppointments(AppointmentsManager manager) async {
     return;
   }
 
-  final List<dynamic> results = jsonDecode(response.body) as List<dynamic>;
+  final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+  final docs = decoded['documents'] as List<dynamic>? ?? [];
   final List<AppointmentData> items = [];
-  for (final result in results) {
-    final doc = (result as Map<String, dynamic>)['document']
-        as Map<String, dynamic>?;
-    if (doc == null) continue;
-    final parsed = _fromRestDocument(doc);
+  for (final doc in docs) {
+    final parsed = _fromRestDocument(doc as Map<String, dynamic>);
     if (parsed != null) items.add(parsed);
   }
 
@@ -289,6 +357,10 @@ AppointmentData? _fromRestDocument(Map<String, dynamic> doc) {
   final dateTimeValue = _timestampField(fields['appointmentDateTime']);
   final dateValue = _timestampField(fields['appointmentDate']);
   final timeRaw = _stringField(fields['appointmentTime']);
+  final queueNumber = _intField(fields['queueNumber']);
+  final clinicId = _stringField(fields['clinicId']);
+  final serviceId = _stringField(fields['serviceId']);
+  final slotId = _stringField(fields['slotId']);
 
   final date = dateTimeValue ?? dateValue ?? DateTime.now();
   final time = timeRaw != null && timeRaw.isNotEmpty
@@ -302,6 +374,10 @@ AppointmentData? _fromRestDocument(Map<String, dynamic> doc) {
     date: DateTime(date.year, date.month, date.day),
     time: time,
     location: location ?? '',
+    queueNumber: queueNumber,
+    clinicId: clinicId ?? location,
+    serviceId: serviceId ?? doctorName,
+    slotId: slotId ?? timeRaw,
   );
 }
 
@@ -320,6 +396,14 @@ DateTime? _timestampField(dynamic field) {
   return null;
 }
 
+int? _intField(dynamic field) {
+  if (field is Map<String, dynamic>) {
+    final value = field['integerValue']?.toString();
+    return int.tryParse(value ?? '');
+  }
+  return null;
+}
+
 Future<void> _webAddAppointment(AppointmentData appointment) async {
   if (!AuthSession.isSignedIn) {
     throw Exception('User not authenticated.');
@@ -328,7 +412,7 @@ Future<void> _webAddAppointment(AppointmentData appointment) async {
   final projectId = DefaultFirebaseOptions.currentPlatform.projectId;
   final docId = DateTime.now().millisecondsSinceEpoch.toString();
   final uri = Uri.parse(
-    'https://firestore.googleapis.com/v1/projects/$projectId/databases/(default)/documents/appointments?documentId=$docId',
+    'https://firestore.googleapis.com/v1/projects/$projectId/databases/(default)/documents/users/${AuthSession.userId}/appointments?documentId=$docId',
   );
 
   final dateOnly = DateTime(
@@ -381,7 +465,7 @@ Future<void> _webDeleteAppointment(String id) async {
   final manager = AppointmentsManager();
   final projectId = DefaultFirebaseOptions.currentPlatform.projectId;
   final uri = Uri.parse(
-    'https://firestore.googleapis.com/v1/projects/$projectId/databases/(default)/documents/appointments/$id',
+    'https://firestore.googleapis.com/v1/projects/$projectId/databases/(default)/documents/users/${AuthSession.userId}/appointments/$id',
   );
 
   final response = await http.delete(
@@ -409,7 +493,7 @@ Future<void> _webUpdateAppointment(
   final manager = AppointmentsManager();
   final projectId = DefaultFirebaseOptions.currentPlatform.projectId;
   final uri = Uri.parse(
-    'https://firestore.googleapis.com/v1/projects/$projectId/databases/(default)/documents/appointments/$id?updateMask.fieldPaths=appointmentDate&updateMask.fieldPaths=appointmentTime&updateMask.fieldPaths=appointmentDateTime',
+    'https://firestore.googleapis.com/v1/projects/$projectId/databases/(default)/documents/users/${AuthSession.userId}/appointments/$id?updateMask.fieldPaths=appointmentDate&updateMask.fieldPaths=appointmentTime&updateMask.fieldPaths=appointmentDateTime',
   );
 
   final dateOnly = DateTime(newDate.year, newDate.month, newDate.day).toUtc();
@@ -444,6 +528,7 @@ Future<void> _webUpdateAppointment(
 
   await _loadWebAppointments(manager);
 }
+
 
 // Available doctors
 class Doctor {

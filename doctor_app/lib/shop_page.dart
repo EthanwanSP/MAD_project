@@ -14,6 +14,13 @@ class ShopPage extends StatefulWidget {
 }
 
 class _ShopPageState extends State<ShopPage> {
+  int _cartItemCount(CartManager manager) {
+    var total = 0;
+    for (final item in manager.items) {
+      total += item.quantity;
+    }
+    return total;
+  }
   final List<_ShopItem> _items = const [
     _ShopItem(
       id: 'paracetamol_500',
@@ -159,6 +166,7 @@ class _ShopPageState extends State<ShopPage> {
                         title: item.title,
                         subtitle: item.subtitle,
                         imageUrl: item.imageUrl,
+                        price: item.price,
                         onAddToCart: () => _recordPurchase(item),
                       ),
                     )
@@ -199,24 +207,57 @@ class _ShopPageState extends State<ShopPage> {
                           ],
                         ),
                       ),
-                      FilledButton.icon(
-                        onPressed: () {
-                          Navigator.of(context).pushNamed('/cart');
+                      AnimatedBuilder(
+                        animation: CartManager(),
+                        builder: (context, _) {
+                          final count = _cartItemCount(CartManager());
+                          return Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              FilledButton.icon(
+                                onPressed: () {
+                                  Navigator.of(context).pushNamed('/cart');
+                                },
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: kInk,
+                                  foregroundColor: kPaper,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 14, vertical: 8),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                icon: const Icon(Icons.shopping_cart_outlined,
+                                    size: 18),
+                                label: const Text(
+                                  'Cart',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              if (count > 0)
+                                Positioned(
+                                  top: -6,
+                                  right: -6,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: Colors.red.shade400,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Text(
+                                      '$count',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          );
                         },
-                        style: FilledButton.styleFrom(
-                          backgroundColor: kInk,
-                          foregroundColor: kPaper,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 8),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        icon: const Icon(Icons.shopping_cart_outlined, size: 18),
-                        label: const Text(
-                          'Cart',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
                       ),
                     ],
                   ),
@@ -235,12 +276,14 @@ class _ShopCard extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.imageUrl,
+    required this.price,
     this.onAddToCart,
   });
 
   final String title;
   final String subtitle;
   final String imageUrl;
+  final double price;
   final VoidCallback? onAddToCart;
 
   @override
@@ -270,17 +313,35 @@ class _ShopCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              height: 40,
-              width: 40,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
                 color: kPeach.withOpacity(0.8),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.shopping_bag_outlined, color: kInk),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.local_offer_outlined,
+                      color: kInk, size: 16),
+                  const SizedBox(width: 6),
+                  Text(
+                    '\$${price.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      color: kInk,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
             ),
             const Spacer(),
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.45),
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -309,7 +370,7 @@ class _ShopCard extends StatelessWidget {
                     child: FilledButton(
                       onPressed: onAddToCart,
                       style: FilledButton.styleFrom(
-                        backgroundColor: kInk,
+                        backgroundColor: Colors.black.withOpacity(0.6),
                         foregroundColor: kPaper,
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 6),

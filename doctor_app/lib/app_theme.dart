@@ -22,6 +22,30 @@ ThemeData buildAppTheme() {
   return ThemeData(
     colorScheme: colorScheme,
     scaffoldBackgroundColor: kPaper,
+    navigationBarTheme: NavigationBarThemeData(
+      height: 52,
+      backgroundColor: kBlush,
+      indicatorColor: kPaper,
+      indicatorShape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+      ),
+      labelTextStyle: WidgetStateProperty.resolveWith(
+        (states) => GoogleFonts.ptSerif(
+          fontSize: 12,
+          fontWeight: states.contains(WidgetState.selected)
+              ? FontWeight.w600
+              : FontWeight.w400,
+          color: states.contains(WidgetState.selected)
+              ? kPaper
+              : kInk.withOpacity(0.7),
+        ),
+      ),
+      iconTheme: WidgetStateProperty.resolveWith(
+        (states) => const IconThemeData(
+          color: kInk,
+        ),
+      ),
+    ),
     appBarTheme: AppBarTheme(
       backgroundColor: Colors.transparent,
       elevation: 0,

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'app_theme.dart';
 import 'home_shell.dart';
 import 'appointments_manager.dart';
+import 'home_dashboard.dart';
 
 class CalendarPage extends StatefulWidget {
   const CalendarPage({super.key});
@@ -13,33 +14,17 @@ class CalendarPage extends StatefulWidget {
 
 class _CalendarPageState extends State<CalendarPage> {
   final AppointmentsManager _manager = AppointmentsManager();
-  List<CalendarEvent> calendarEvents = [
-    CalendarEvent(
-      id: 'c1',
-      title: 'Health check-up',
-      date: 'Feb 14, 2026',
-      time: '10:30 AM',
-      location: 'MediConnect Clinic',
-    ),
-    CalendarEvent(
-      id: 'c2',
-      title: 'Tele consult follow-up',
-      date: 'Feb 20, 2026',
-      time: '7:00 PM',
-      location: 'Video call',
-    ),
-    CalendarEvent(
-      id: 'c3',
-      title: 'Medication refill',
-      date: 'Feb 28, 2026',
-      time: 'All day',
-      location: 'Pharmacy pickup',
-    ),
-  ];
+  DateTime _visibleMonth = DateTime(DateTime.now().year, DateTime.now().month);
+  DateTime? _selectedDate;
 
   @override
   void initState() {
     super.initState();
+    _selectedDate = DateTime(
+      DateTime.now().year,
+      DateTime.now().month,
+      DateTime.now().day,
+    );
     _manager.addListener(_onAppointmentsChanged);
   }
 
@@ -53,80 +38,53 @@ class _CalendarPageState extends State<CalendarPage> {
     setState(() {});
   }
 
-  void _removeEvent(String id) {
+  List<DateTime> _monthGridDays(DateTime month) {
+    final firstDay = DateTime(month.year, month.month, 1);
+    final firstWeekday = firstDay.weekday % 7; // 0 = Sunday
+    final start = firstDay.subtract(Duration(days: firstWeekday));
+    return List.generate(42, (index) => start.add(Duration(days: index)));
+  }
+
+  void _changeMonth(int delta) {
     setState(() {
-      calendarEvents.removeWhere((event) => event.id == id);
+      _visibleMonth = DateTime(_visibleMonth.year, _visibleMonth.month + delta);
     });
   }
 
-  String _generateEventId() {
-    if (calendarEvents.isEmpty) return 'c1';
-    final ids = calendarEvents
-        .map((e) => int.tryParse(e.id.replaceAll('c', '')) ?? 0)
-        .toList();
-    final maxId = ids.reduce((a, b) => a > b ? a : b);
-    return 'c${maxId + 1}';
-  }
-
-  void _showAddAppointmentDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AddAppointmentToCalendarDialog(
-        appointments: _manager.appointments,
-        onAddToCalendar: (appointment) {
-          setState(() {
-            final newEvent = CalendarEvent(
-              id: _generateEventId(),
-              title: 'Appointment with ${appointment.name}',
-              date: _formatDate(appointment.date),
-              time: _formatTime(appointment.time),
-              location: appointment.location,
-            );
-            calendarEvents.add(newEvent);
-          });
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Appointment added to calendar'),
-              backgroundColor: Colors.green.shade600,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  String _formatDate(DateTime date) {
+  String _monthLabel(DateTime date) {
     const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
+      'January',
+      'February',
+      'March',
+      'April',
       'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec'
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December'
     ];
-    return '${months[date.month - 1]} ${date.day}, ${date.year}';
+    return '${months[date.month - 1]} ${date.year}';
   }
 
-  String _formatTime(TimeOfDay time) {
-    final hour = time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod;
-    final minute = time.minute.toString().padLeft(2, '0');
-    final period = time.period == DayPeriod.am ? 'AM' : 'PM';
-    return '$hour:$minute $period';
+  bool _isSameDay(DateTime? a, DateTime? b) {
+    if (a == null || b == null) return false;
+    return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final appointments = _manager.appointments;
+    final DateTime selectedDate = _selectedDate ??
+        DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    final selectedAppointments = appointments
+        .where((appt) => _isSameDay(appt.date, selectedDate))
+        .toList();
+    final gridDays = _monthGridDays(_visibleMonth);
+    final now = DateTime.now();
+    return Material(
       color: kPaper,
       child: Stack(
         children: [
@@ -137,28 +95,140 @@ class _CalendarPageState extends State<CalendarPage> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Upcoming (${calendarEvents.length})',
-                        style: Theme.of(context).textTheme.titleMedium),
-                    FilledButton.icon(
-                      onPressed: _showAddAppointmentDialog,
-                      icon: const Icon(Icons.add, size: 18),
-                      label: const Text('Add'),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: kPeach,
-                        foregroundColor: kInk,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                    IconButton(
+                      onPressed: () => _changeMonth(-1),
+                      icon: const Icon(Icons.chevron_left, color: kInk),
+                    ),
+                    Expanded(
+                      child: Center(
+                        child: Text(
+                          _monthLabel(_visibleMonth),
+                          style: Theme.of(context).textTheme.titleSmall,
+                        ),
                       ),
+                    ),
+                    IconButton(
+                      onPressed: () => _changeMonth(1),
+                      icon: const Icon(Icons.chevron_right, color: kInk),
                     ),
                   ],
                 ),
               ),
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: const [
+                    _WeekdayLabel(text: 'Sun'),
+                    _WeekdayLabel(text: 'Mon'),
+                    _WeekdayLabel(text: 'Tue'),
+                    _WeekdayLabel(text: 'Wed'),
+                    _WeekdayLabel(text: 'Thu'),
+                    _WeekdayLabel(text: 'Fri'),
+                    _WeekdayLabel(text: 'Sat'),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: gridDays.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 7,
+                    mainAxisSpacing: 6,
+                    crossAxisSpacing: 6,
+                    childAspectRatio: 1,
+                  ),
+                  itemBuilder: (context, index) {
+                    final day = gridDays[index];
+                    final inMonth = day.month == _visibleMonth.month;
+                    final isToday = _isSameDay(day, now);
+                    final isSelected = _isSameDay(day, selectedDate);
+                    final hasAppointments = appointments.any(
+                      (appt) => _isSameDay(appt.date, day),
+                    );
+                    return InkWell(
+                      borderRadius: BorderRadius.circular(10),
+                      onTap: () {
+                        setState(() {
+                          _selectedDate =
+                              DateTime(day.year, day.month, day.day);
+                          if (day.month != _visibleMonth.month) {
+                            _visibleMonth =
+                                DateTime(day.year, day.month, 1);
+                          }
+                        });
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? kInk
+                              : isToday
+                                  ? kInk.withOpacity(0.15)
+                                  : Colors.transparent,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: inMonth
+                                ? kInk.withOpacity(0.08)
+                                : Colors.transparent,
+                          ),
+                        ),
+                        child: Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                '${day.day}',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                      color: isSelected
+                                          ? kPaper
+                                          : inMonth
+                                              ? kInk
+                                              : kInk.withOpacity(0.3),
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                    ),
+                              ),
+                              const SizedBox(height: 4),
+                              if (hasAppointments)
+                                Container(
+                                  height: 4,
+                                  width: 4,
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? kPaper
+                                        : kInk,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                )
+                              else
+                                const SizedBox(height: 4),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
               const SizedBox(height: 12),
-              if (calendarEvents.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                    'Upcoming (${selectedAppointments.length})',
+                    style: Theme.of(context).textTheme.titleMedium),
+              ),
+              const SizedBox(height: 12),
+              if (selectedAppointments.isEmpty)
                 Padding(
                   padding: const EdgeInsets.all(40),
                   child: Column(
@@ -167,14 +237,14 @@ class _CalendarPageState extends State<CalendarPage> {
                           size: 80, color: kInk.withOpacity(0.3)),
                       const SizedBox(height: 16),
                       Text(
-                        'No calendar events',
+                        'No appointments for this day',
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               color: kInk.withOpacity(0.5),
                             ),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Add appointments from your appointments list',
+                        'Pick another date to see appointments',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: kInk.withOpacity(0.5),
                             ),
@@ -184,10 +254,12 @@ class _CalendarPageState extends State<CalendarPage> {
                   ),
                 )
               else
-                ...calendarEvents.map((event) => _EventCard(
-                      key: ValueKey(event.id),
-                      event: event,
-                      onComplete: () => _removeEvent(event.id),
+                ...selectedAppointments.map((appointment) => _EventCard(
+                      key: ValueKey(appointment.id),
+                      appointment: appointment,
+                      onComplete: () async {
+                        await _manager.cancelAppointment(appointment.id);
+                      },
                     )),
               const SizedBox(height: 24),
             ],
@@ -201,8 +273,7 @@ class _CalendarPageState extends State<CalendarPage> {
               padding: const EdgeInsets.fromLTRB(20, 50, 20, 22),
               decoration: const BoxDecoration(
                 color: kBlush,
-                borderRadius:
-                    BorderRadius.vertical(bottom: Radius.circular(24)),
+                borderRadius: BorderRadius.vertical(bottom: Radius.circular(24)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -212,8 +283,7 @@ class _CalendarPageState extends State<CalendarPage> {
                       IconButton(
                         onPressed: () {
                           Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(
-                                builder: (_) => const HomeShell()),
+                            MaterialPageRoute(builder: (_) => const HomeShell()),
                           );
                         },
                         icon: const Icon(Icons.arrow_back, color: kInk),
@@ -244,33 +314,15 @@ class _CalendarPageState extends State<CalendarPage> {
   }
 }
 
-// Calendar Event Model
-class CalendarEvent {
-  final String id;
-  final String title;
-  final String date;
-  final String time;
-  final String location;
-
-  CalendarEvent({
-    required this.id,
-    required this.title,
-    required this.date,
-    required this.time,
-    required this.location,
-  });
-}
-
-// Add Appointment to Calendar Dialog
-class AddAppointmentToCalendarDialog extends StatelessWidget {
-  const AddAppointmentToCalendarDialog({
+class _EventCard extends StatelessWidget {
+  const _EventCard({
     super.key,
-    required this.appointments,
-    required this.onAddToCalendar,
+    required this.appointment,
+    required this.onComplete,
   });
 
-  final List<AppointmentData> appointments;
-  final Function(AppointmentData) onAddToCalendar;
+  final AppointmentData appointment;
+  final Future<void> Function() onComplete;
 
   String _formatDate(DateTime date) {
     const months = [
@@ -297,197 +349,14 @@ class AddAppointmentToCalendarDialog extends StatelessWidget {
     return '$hour:$minute $period';
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      child: Container(
-        constraints: BoxConstraints(maxHeight: 500),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(24),
-              child: Row(
-                children: [
-                  Icon(Icons.event_note, color: kPeach, size: 28),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Add to Calendar',
-                          style:
-                              Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                        ),
-                        Text(
-                          'Select an appointment to add',
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: kInk.withOpacity(0.6),
-                                  ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Divider(height: 1, color: kInk.withOpacity(0.1)),
-            Expanded(
-              child: appointments.isEmpty
-                  ? Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(32),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.event_busy,
-                                size: 64, color: kInk.withOpacity(0.3)),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No appointments available',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium
-                                  ?.copyWith(
-                                    color: kInk.withOpacity(0.5),
-                                  ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Book an appointment first',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
-                                  ?.copyWith(
-                                    color: kInk.withOpacity(0.5),
-                                  ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      itemCount: appointments.length,
-                      itemBuilder: (context, index) {
-                        final appointment = appointments[index];
-                        return InkWell(
-                          onTap: () {
-                            onAddToCalendar(appointment);
-                            Navigator.of(context).pop();
-                          },
-                          child: Container(
-                            margin: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 6),
-                            padding: const EdgeInsets.all(14),
-                            decoration: BoxDecoration(
-                              color: kPaper,
-                              borderRadius: BorderRadius.circular(16),
-                              border:
-                                  Border.all(color: kInk.withOpacity(0.08)),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: kInk.withOpacity(0.04),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              children: [
-                                CircleAvatar(
-                                  radius: 20,
-                                  backgroundColor: kPeach.withOpacity(0.35),
-                                  child: const Icon(Icons.person,
-                                      color: kInk, size: 20),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        appointment.name,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleSmall
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        '${_formatDate(appointment.date)} at ${_formatTime(appointment.time)}',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodySmall,
-                                      ),
-                                      Text(
-                                        appointment.location,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodySmall
-                                            ?.copyWith(
-                                              color: kInk.withOpacity(0.6),
-                                            ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Icon(Icons.add_circle_outline,
-                                    color: kPeach, size: 24),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-            ),
-            Divider(height: 1, color: kInk.withOpacity(0.1)),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                style: TextButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 48),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
-                ),
-                child: const Text('Cancel',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _EventCard extends StatelessWidget {
-  const _EventCard({
-    super.key,
-    required this.event,
-    required this.onComplete,
-  });
-
-  final CalendarEvent event;
-  final VoidCallback onComplete;
-
   Future<void> _showCompleteDialog(BuildContext context) async {
     final bool? confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Mark as Complete'),
-        content: Text(
-          'Mark "${event.title}" as complete? This will remove it from your calendar.',
+        content: const Text(
+          'Mark this appointment as complete? This will remove it from your calendar.',
         ),
         actions: [
           TextButton(
@@ -509,7 +378,7 @@ class _EventCard extends StatelessWidget {
     );
 
     if (confirmed == true) {
-      onComplete();
+      await onComplete();
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -547,7 +416,7 @@ class _EventCard extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: Text(event.title,
+                child: Text('Appointment with ${appointment.name}',
                     style: Theme.of(context).textTheme.titleMedium),
               ),
               Container(
@@ -568,9 +437,15 @@ class _EventCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          _EventRow(icon: Icons.event_outlined, text: event.date),
-          _EventRow(icon: Icons.schedule_outlined, text: event.time),
-          _EventRow(icon: Icons.place_outlined, text: event.location),
+          _EventRow(
+            icon: Icons.event_outlined,
+            text: _formatDate(appointment.date),
+          ),
+          _EventRow(
+            icon: Icons.schedule_outlined,
+            text: _formatTime(appointment.time),
+          ),
+          _EventRow(icon: Icons.place_outlined, text: appointment.location),
         ],
       ),
     );
@@ -596,6 +471,23 @@ class _EventRow extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _WeekdayLabel extends StatelessWidget {
+  const _WeekdayLabel({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: kInk.withOpacity(0.6),
+            fontWeight: FontWeight.bold,
+          ),
     );
   }
 }
