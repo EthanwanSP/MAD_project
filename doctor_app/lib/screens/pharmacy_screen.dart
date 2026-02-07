@@ -17,7 +17,7 @@ class PharmacyScreen extends StatelessWidget {
       name: 'Paracetamol 500mg',
       description: 'Pain & fever relief',
       imageUrl:
-          'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=800',
+          'https://images.unsplash.com/photo-1729708273852-b63222c8b35d?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=80&w=900',
       price: 6.99,
     ),
     Product(
@@ -25,7 +25,7 @@ class PharmacyScreen extends StatelessWidget {
       name: 'Ibuprofen 200mg',
       description: 'Anti-inflammatory',
       imageUrl:
-          'https://images.unsplash.com/photo-1585435557343-3b092031a831?w=800',
+          'https://images.unsplash.com/photo-1590845947372-4e494e15adee?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=80&w=900',
       price: 8.49,
     ),
     Product(
@@ -33,7 +33,7 @@ class PharmacyScreen extends StatelessWidget {
       name: 'Cetirizine 10mg',
       description: 'Allergy relief',
       imageUrl:
-          'https://images.unsplash.com/photo-1628595351029-c2bf17511435?w=800',
+          'https://images.unsplash.com/photo-1701201632697-7ec41bfee65f?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=80&w=900',
       price: 9.99,
     ),
     Product(
@@ -41,7 +41,7 @@ class PharmacyScreen extends StatelessWidget {
       name: 'Amoxicillin 500mg',
       description: 'Antibiotic',
       imageUrl:
-          'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=800',
+          'https://images.unsplash.com/photo-1729700985373-d79e1be65261?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=80&w=900',
       price: 12.50,
     ),
     Product(
@@ -49,7 +49,7 @@ class PharmacyScreen extends StatelessWidget {
       name: 'Omeprazole 20mg',
       description: 'Acid reducer',
       imageUrl:
-          'https://images.unsplash.com/photo-1512069772995-ec65ed45afd6?w=800',
+          'https://images.unsplash.com/photo-1729704200385-2619661df737?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=80&w=900',
       price: 10.25,
     ),
     Product(
@@ -57,7 +57,7 @@ class PharmacyScreen extends StatelessWidget {
       name: 'Vitamin C 1000mg',
       description: 'Immune support',
       imageUrl:
-          'https://images.unsplash.com/photo-1576602975754-8d5f35b1ad56?w=800',
+          'https://images.unsplash.com/photo-1729701028036-79547650a563?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=80&w=900',
       price: 11.99,
     ),
     Product(
@@ -65,7 +65,7 @@ class PharmacyScreen extends StatelessWidget {
       name: 'Loratadine 10mg',
       description: 'Non-drowsy allergy',
       imageUrl:
-          'https://images.unsplash.com/photo-1585435557343-3b092031a831?w=800',
+          'https://images.unsplash.com/photo-1729703551869-354dc14a27d1?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=80&w=900',
       price: 9.25,
     ),
   ];
@@ -117,11 +117,6 @@ class PharmacyScreen extends StatelessWidget {
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
-                ),
-                const Spacer(),
-                TextButton(
-                  onPressed: () {},
-                  child: const Text('See all'),
                 ),
               ],
             ),

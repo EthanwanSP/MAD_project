@@ -30,7 +30,6 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  final TextEditingController _recordController = TextEditingController();
   Map<String, dynamic>? _webHealthProfile;
   bool _webHasAddress = false;
 
@@ -44,7 +43,6 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   void dispose() {
-    _recordController.dispose();
     super.dispose();
   }
 
@@ -88,14 +86,14 @@ class _ProfilePageState extends State<ProfilePage> {
                       'values': allergyList
                           .map((e) => {'stringValue': e})
                           .toList(),
-                    }
+                    },
                   },
                   'conditions': {
                     'arrayValue': {
                       'values': conditionList
                           .map((e) => {'stringValue': e})
                           .toList(),
-                    }
+                    },
                   },
                   'emergencyName': {'stringValue': emergencyName},
                   'emergencyPhone': {'stringValue': emergencyPhone},
@@ -341,116 +339,23 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _openHealthProfileSheet() async {
-    _recordController.clear();
-    final bloodTypeController = TextEditingController();
-    final allergiesController = TextEditingController();
-    final conditionsController = TextEditingController();
-    final emergencyNameController = TextEditingController();
-    final emergencyPhoneController = TextEditingController();
-    await showModalBottomSheet<void>(
+    final result = await showModalBottomSheet<Map<String, String>>(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (context) {
-        return Padding(
-          padding: EdgeInsets.fromLTRB(
-            AppSpacing.md,
-            AppSpacing.md,
-            AppSpacing.md,
-            MediaQuery.of(context).viewInsets.bottom + AppSpacing.lg,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text('Update health profile',
-                        style: AppTextStyles.sectionTitle(context)),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.of(context).pop(),
-                    tooltip: 'Close',
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              TextField(
-                controller: bloodTypeController,
-                decoration: const InputDecoration(hintText: 'Blood type (e.g. O+)'),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              TextField(
-                controller: allergiesController,
-                decoration: const InputDecoration(hintText: 'Allergies (comma separated)'),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              TextField(
-                controller: conditionsController,
-                decoration:
-                    const InputDecoration(hintText: 'Conditions (comma separated)'),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              TextField(
-                controller: emergencyNameController,
-                decoration:
-                    const InputDecoration(hintText: 'Emergency contact name'),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              TextField(
-                controller: emergencyPhoneController,
-                keyboardType: TextInputType.phone,
-                decoration:
-                    const InputDecoration(hintText: 'Emergency contact phone'),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              TextField(
-                controller: _recordController,
-                decoration: const InputDecoration(
-                  hintText: 'Additional notes (optional)',
-                ),
-                maxLines: 2,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: kInk,
-                    foregroundColor: kPaper,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    _saveHealthProfile(
-                      bloodType: bloodTypeController.text.trim(),
-                      allergies: allergiesController.text.trim(),
-                      conditions: conditionsController.text.trim(),
-                      emergencyName: emergencyNameController.text.trim(),
-                      emergencyPhone: emergencyPhoneController.text.trim(),
-                      notes: _recordController.text.trim(),
-                    );
-                  },
-                  child: const Text('Save'),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+      builder: (context) => const _HealthProfileSheet(),
     );
-    bloodTypeController.dispose();
-    allergiesController.dispose();
-    conditionsController.dispose();
-    emergencyNameController.dispose();
-    emergencyPhoneController.dispose();
+    if (!mounted || result == null) return;
+    await _saveHealthProfile(
+      bloodType: result['bloodType'] ?? '',
+      allergies: result['allergies'] ?? '',
+      conditions: result['conditions'] ?? '',
+      emergencyName: result['emergencyName'] ?? '',
+      emergencyPhone: result['emergencyPhone'] ?? '',
+      notes: result['notes'] ?? '',
+    );
   }
 
   @override
@@ -1051,6 +956,164 @@ class _HealthSummary extends StatelessWidget {
           child: const Text('Edit health info'),
         ),
       ],
+    );
+  }
+}
+
+class _HealthProfileSheet extends StatefulWidget {
+  const _HealthProfileSheet();
+
+  @override
+  State<_HealthProfileSheet> createState() => _HealthProfileSheetState();
+}
+
+class _HealthProfileSheetState extends State<_HealthProfileSheet> {
+  final TextEditingController _bloodTypeController = TextEditingController();
+  final TextEditingController _allergiesController = TextEditingController();
+  final TextEditingController _conditionsController = TextEditingController();
+  final TextEditingController _emergencyNameController = TextEditingController();
+  final TextEditingController _emergencyPhoneController = TextEditingController();
+  final TextEditingController _notesController = TextEditingController();
+
+  @override
+  void dispose() {
+    _bloodTypeController.dispose();
+    _allergiesController.dispose();
+    _conditionsController.dispose();
+    _emergencyNameController.dispose();
+    _emergencyPhoneController.dispose();
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final bloodType = _bloodTypeController.text.trim();
+    final emergencyName = _emergencyNameController.text.trim();
+    final emergencyPhone = _emergencyPhoneController.text.trim();
+    if (bloodType.isEmpty ||
+        emergencyName.isEmpty ||
+        emergencyPhone.isEmpty) {
+      showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Missing required fields'),
+          content: const Text(
+            'Blood type, emergency contact name, and phone cannot be empty.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+    FocusManager.instance.primaryFocus?.unfocus();
+    Navigator.of(context).pop({
+      'bloodType': bloodType,
+      'allergies': _allergiesController.text.trim(),
+      'conditions': _conditionsController.text.trim(),
+      'emergencyName': emergencyName,
+      'emergencyPhone': emergencyPhone,
+      'notes': _notesController.text.trim(),
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.md,
+        AppSpacing.md,
+        MediaQuery.of(context).viewInsets.bottom + AppSpacing.lg,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Update health profile',
+                  style: AppTextStyles.sectionTitle(context),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () {
+                  FocusManager.instance.primaryFocus?.unfocus();
+                  Navigator.of(context).pop();
+                },
+                tooltip: 'Close',
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          TextField(
+            controller: _bloodTypeController,
+            decoration: const InputDecoration(
+              hintText: 'Blood type (e.g. O+)',
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          TextField(
+            controller: _allergiesController,
+            decoration: const InputDecoration(
+              hintText: 'Allergies (comma separated)',
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          TextField(
+            controller: _conditionsController,
+            decoration: const InputDecoration(
+              hintText: 'Conditions (comma separated)',
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          TextField(
+            controller: _emergencyNameController,
+            decoration: const InputDecoration(
+              hintText: 'Emergency contact name',
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          TextField(
+            controller: _emergencyPhoneController,
+            keyboardType: TextInputType.phone,
+            decoration: const InputDecoration(
+              hintText: 'Emergency contact phone',
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          TextField(
+            controller: _notesController,
+            decoration: const InputDecoration(
+              hintText: 'Additional notes (optional)',
+            ),
+            maxLines: 2,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: kInk,
+                foregroundColor: kPaper,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onPressed: _submit,
+              child: const Text('Save'),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

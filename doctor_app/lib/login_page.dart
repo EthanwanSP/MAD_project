@@ -1,14 +1,8 @@
-import 'dart:convert';
-
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:doctor_app/firebase_options.dart';
 import 'auth_session.dart';
 import 'package:lottie/lottie.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 
 import 'app_theme.dart';
 import 'home_shell.dart';
@@ -30,9 +24,6 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-    if (kIsWeb) {
-      _handleRedirectResult();
-    }
   }
 
   @override
@@ -118,122 +109,6 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  Future<void> _signInWithGoogle() async {
-    setState(() {
-      _isLoading = true;
-    });
-    try {
-      UserCredential credential;
-      if (kIsWeb) {
-        final provider = GoogleAuthProvider();
-        await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
-        await FirebaseAuth.instance.signInWithRedirect(provider);
-        return;
-      } else {
-        final googleUser = await GoogleSignIn().signIn();
-        if (googleUser == null) {
-          return;
-        }
-        final googleAuth = await googleUser.authentication;
-        final googleCredential = GoogleAuthProvider.credential(
-          accessToken: googleAuth.accessToken,
-          idToken: googleAuth.idToken,
-        );
-        credential =
-            await FirebaseAuth.instance.signInWithCredential(googleCredential);
-      }
-
-      await _handleSignedInUser(credential.user);
-    } on FirebaseAuthException catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.message ?? 'Google sign-in failed.'),
-            backgroundColor: Colors.red.shade400,
-            behavior: SnackBarBehavior.floating,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Google sign-in failed: $e'),
-            backgroundColor: Colors.red.shade400,
-            behavior: SnackBarBehavior.floating,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
-  Future<void> _handleRedirectResult() async {
-    try {
-      final result = await FirebaseAuth.instance.getRedirectResult();
-      if (result.user != null) {
-        await _handleSignedInUser(result.user);
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Google sign-in failed: $e'),
-            backgroundColor: Colors.red.shade400,
-            behavior: SnackBarBehavior.floating,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
-  Future<void> _handleSignedInUser(User? user) async {
-    if (user == null) return;
-    AuthSession.userId = user.uid;
-    AuthSession.email = user.email ?? '';
-    AuthSession.displayName =
-        user.displayName?.trim().isNotEmpty == true
-            ? user.displayName!
-            : (user.email?.split('@').first ?? 'User');
-    try {
-      AuthSession.idToken = await user.getIdToken();
-    } catch (_) {}
-    try {
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-        'userId': user.uid,
-        'name': user.displayName ?? '',
-        'email': user.email ?? '',
-        'createdAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-    } catch (_) {
-      // Proceed even if Firestore write fails (auth sign-in may have succeeded).
-    }
-
-    if (mounted) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (_) => const HomeShell(),
-        ),
-      );
-    }
-  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -246,11 +121,16 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ),
         child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: IntrinsicHeight(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
                 Lottie.network('https://lottie.host/ef347e76-39ef-429b-afc9-985cd90a7189/1lpuwAfKUM.json',
                 width: 200,
                 height: 200),
@@ -370,73 +250,13 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Divider(
-                        color: kInk.withOpacity(0.3),
-                        thickness: 1,
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text(
-                        'Or',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: kInk.withOpacity(0.6),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Divider(
-                        color: kInk.withOpacity(0.3),
-                        thickness: 1,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: 260,
-                  height: 52,
-                  child: OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1A1A1A),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 18),
-                      side: BorderSide(color: Colors.white.withOpacity(0.15)),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(28),
-                      ),
-                      elevation: 4,
-                      shadowColor: Colors.black.withOpacity(0.3),
-                    ),
-                    onPressed: _isLoading ? null : _signInWithGoogle,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Image.asset(
-                          'assets/images/google-logo.png',
-                          height: 22,
-                        ),
-                        const SizedBox(width: 10),
-                        const Text(
-                          'Sign in with Google',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'Roboto',
-                            color: Colors.white,
-                          ),
-                        ),
+                const SizedBox(height: 24),
                       ],
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
-              ],
-            ),
+              );
+            },
           ),
         ),
       ),

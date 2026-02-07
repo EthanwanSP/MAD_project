@@ -69,7 +69,6 @@ class _CustomizeProfilePageState extends State<CustomizeProfilePage> {
     });
 
     final name = _nameController.text.trim();
-    final email = widget.email;
     final phone = _phoneController.text.trim();
     final photoUrl = _photoController.text.trim();
 
@@ -238,7 +237,7 @@ class _CustomizeProfilePageState extends State<CustomizeProfilePage> {
                   : null,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           TextButton.icon(
             onPressed: _pickImage,
             icon: const Icon(Icons.image_outlined),
