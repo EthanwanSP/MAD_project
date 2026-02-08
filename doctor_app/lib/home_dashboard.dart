@@ -58,7 +58,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
                 title: 'Quick Actions',
                 subtitle: 'What would you like to do today?',
               ),
-              const SizedBox(height: _padSm),
+
               _QuickActionsGrid(
                 tiles: [
                   ActionTile(

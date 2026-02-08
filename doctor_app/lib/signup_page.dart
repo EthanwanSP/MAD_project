@@ -282,7 +282,7 @@ class _SignupPageState extends State<SignupPage> {
                             controller: _newemailcontroller,
                             decoration: InputDecoration(
                               border: InputBorder.none,
-                              hintText: 'Email or mobile number',
+                              hintText: 'Email',
                               prefixIcon: const Icon(Icons.mail_outline),
                               suffixIcon: _newemailcontroller.text.isEmpty
                                   ? Container(width: 0)

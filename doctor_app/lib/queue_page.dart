@@ -101,7 +101,7 @@ class _QueuePageState extends State<QueuePage> {
                 ),
                 const SizedBox(height: 8),
                 _QueueStatusTile(
-                  label: 'Service',
+                  label: 'Doctor',
                   status: appointment.name,
                 ),
                 _QueueStatusTile(

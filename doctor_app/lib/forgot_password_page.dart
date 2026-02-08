@@ -171,7 +171,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                             obscureText: false,
                             decoration: InputDecoration(
                               border: InputBorder.none,
-                              hintText: 'Enter email or mobile number',
+                              hintText: 'Enter registered email',
                               prefixIcon: Icon(Icons.lock_outline),
                             ),
                           ),
